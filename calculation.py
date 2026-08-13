@@ -6,6 +6,10 @@ def calculate(df):
 
     df = df.copy()
 
+    # =====================================
+    # CONVERT TO NUMERIC
+    # =====================================
+
     numeric_columns = [
         "Need",
         "Remain Insert",
@@ -28,17 +32,23 @@ def calculate(df):
                 errors="coerce"
             ).fillna(0)
 
-    # Outstanding
+    # =====================================
+    # OUTSTANDING
+    # =====================================
 
     if "Need" in df.columns:
 
-        df["Outstanding"] = df["Need"]
+        df["Outstanding"] = (
+            df["Need"]
+        )
 
     else:
 
         df["Outstanding"] = 0
 
-    # Coil Inventory
+    # =====================================
+    # COIL INVENTORY
+    # =====================================
 
     inventory_columns = [
 
@@ -69,15 +79,20 @@ def calculate(df):
     if len(existing_inventory) > 0:
 
         df["Coil_Inv"] = (
+
             df[existing_inventory]
+
             .sum(axis=1)
+
         )
 
     else:
 
         df["Coil_Inv"] = 0
 
-    # Production Add
+    # =====================================
+    # PRODUCTION ADD
+    # =====================================
 
     df["Production_Add"] = np.maximum(
 
@@ -86,9 +101,12 @@ def calculate(df):
         df["Outstanding"]
 
         - df["Coil_Inv"]
+
     )
 
-    # Remaining Coil
+    # =====================================
+    # REMAINING COIL
+    # =====================================
 
     df["Remaining_Coil"] = np.maximum(
 
@@ -97,27 +115,23 @@ def calculate(df):
         df["Coil_Inv"]
 
         - df["Outstanding"]
+
     )
 
-    # Move Coil
+    # =====================================
+    # MOVE COIL
+    # =====================================
 
     if "Rdy Shp+" in df.columns:
 
-        df["Move_Coil"] = df["Rdy Shp+"]
+        df["Move_Coil"] = (
+
+            df["Rdy Shp+"]
+
+        )
 
     else:
 
         df["Move_Coil"] = 0
 
-    # Order Status
-
-    df["Order_Status"] = np.where(
-
-        df["Production_Add"] > 0,
-
-        "OPEN",
-
-        "CLOSED"
-    )
-
-    return df
+    # ============================
