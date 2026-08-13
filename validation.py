@@ -5,77 +5,117 @@ def validate_data(df):
 
     issues = []
 
-    # Check negative outstanding
+    # Negative Outstanding
     if "Outstanding" in df.columns:
 
-        negative_rows = df[df["Outstanding"] < 0]
+        negative_rows = df[
+            df["Outstanding"] < 0
+        ]
 
         if len(negative_rows) > 0:
+
             issues.append(
                 f"Negative Outstanding found: {len(negative_rows)} rows"
             )
 
-    # Check duplicate order number
-   if (
-    "OrderNo" in df.columns
-    and "Item" in df.columns
-):
+    # Duplicate Order + Item
+    if (
+        "OrderNo" in df.columns
+        and "Item" in df.columns
+    ):
 
-    df["Order_Item_Key"] = (
-        df["OrderNo"].astype(str)
-        + "_"
-        + df["Item"].astype(str)
-    )
-
-    duplicate_rows = df[
-        df["Order_Item_Key"].duplicated()
-    ]
-
-    if len(duplicate_rows) > 0:
-
-        issues.append(
-            f"Duplicate Order+Item found: {len(duplicate_rows)} rows"
+        order_item_key = (
+            df["OrderNo"].astype(str)
+            + "_"
+            + df["Item"].astype(str)
         )
 
+        duplicate_rows = df[
+            order_item_key.duplicated()
+        ]
+
         if len(duplicate_rows) > 0:
+
             issues.append(
-                f"Duplicate OrderNo found: {len(duplicate_rows)} rows"
+                f"Duplicate Order+Item found: {len(duplicate_rows)} rows"
             )
 
-    # Check blank buyer
+    # Blank Buyer
     if "Buyer" in df.columns:
 
-        blank_buyer = df["Buyer"].isna().sum()
+        blank_buyer = (
+            df["Buyer"]
+            .isna()
+            .sum()
+        )
 
         if blank_buyer > 0:
+
             issues.append(
                 f"Blank Buyer found: {blank_buyer} rows"
             )
 
-    # Check blank customer
+    # Blank Customer
     if "End Cust." in df.columns:
 
-        blank_customer = df["End Cust."].isna().sum()
+        blank_customer = (
+            df["End Cust."]
+            .isna()
+            .sum()
+        )
 
         if blank_customer > 0:
+
             issues.append(
                 f"Blank Customer found: {blank_customer} rows"
             )
 
-    # Check closed order with inventory
+    # Missing Order Number
+    if "OrderNo" in df.columns:
+
+        blank_order = (
+            df["OrderNo"]
+            .isna()
+            .sum()
+        )
+
+        if blank_order > 0:
+
+            issues.append(
+                f"Blank OrderNo found: {blank_order} rows"
+            )
+
+    # Missing Product Code
+    if "Prod Cd" in df.columns:
+
+        blank_product = (
+            df["Prod Cd"]
+            .isna()
+            .sum()
+        )
+
+        if blank_product > 0:
+
+            issues.append(
+                f"Blank Product Code found: {blank_product} rows"
+            )
+
+    # Closed order with inventory
     if (
-        "Close_Order" in df.columns
+        "Order_Status" in df.columns
         and "Coil_Inv" in df.columns
     ):
 
         invalid_rows = df[
-            (df["Close_Order"] == "CLOSED")
-            & (df["Coil_Inv"] > 0)
+            (df["Order_Status"] == "CLOSED")
+            &
+            (df["Coil_Inv"] > 0)
         ]
 
         if len(invalid_rows) > 0:
+
             issues.append(
-                f"Closed order with inventory found: {len(invalid_rows)} rows"
+                f"Closed Order With Inventory: {len(invalid_rows)} rows"
             )
 
     status = "PASS"
