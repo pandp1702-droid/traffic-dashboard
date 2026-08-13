@@ -22,6 +22,8 @@ if uploaded_file:
 
     df = pd.read_excel(uploaded_file)
 
+    st.write(df.columns.tolist())
+
     result = calculate(df)
 
     validation = validate_data(result)
