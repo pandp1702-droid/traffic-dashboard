@@ -75,7 +75,6 @@ def export_to_excel(df):
             else 0
 
         ]
-
     })
 
     # =====================================
@@ -92,12 +91,11 @@ def export_to_excel(df):
         buyer_summary = (
             df.groupby("Buyer")
             .agg({
-
                 "Outstanding": "sum",
                 "Production_Add": "sum",
                 "NC": "sum",
+                "Move_Available": "sum",
                 "Ready_To_Ship": "sum"
-
             })
             .reset_index()
             .sort_values(
@@ -120,12 +118,11 @@ def export_to_excel(df):
         customer_summary = (
             df.groupby("End Cust.")
             .agg({
-
                 "Outstanding": "sum",
                 "Production_Add": "sum",
                 "NC": "sum",
+                "Move_Available": "sum",
                 "Ready_To_Ship": "sum"
-
             })
             .reset_index()
             .sort_values(
@@ -147,8 +144,10 @@ def export_to_excel(df):
 
         grade_summary = (
             df.groupby("Com.SG")
-            ["Outstanding"]
-            .sum()
+            .agg({
+                "Outstanding": "sum",
+                "Production_Add": "sum"
+            })
             .reset_index()
             .sort_values(
                 "Outstanding",
@@ -176,6 +175,21 @@ def export_to_excel(df):
         ]
 
     # =====================================
+    # MOVE RECOMMENDATION
+    # =====================================
+
+    move_recommendation = pd.DataFrame()
+
+    if "Move_Coil_Result" in df.columns:
+
+        move_recommendation = (
+            df[
+                df["Move_Coil_Result"]
+                != "CLOSED"
+            ]
+        )
+
+    # =====================================
     # HIGH RISK
     # =====================================
 
@@ -185,12 +199,13 @@ def export_to_excel(df):
 
         high_risk_df = (
             df[
-                df["High_Risk"] == "YES"
+                df["High_Risk"]
+                == "YES"
             ]
         )
 
     # =====================================
-    # OLD ORDER
+    # OLD ORDERS
     # =====================================
 
     old_order_df = pd.DataFrame()
@@ -199,7 +214,8 @@ def export_to_excel(df):
 
         old_order_df = (
             df[
-                df["Old_Order"] == "YES"
+                df["Old_Order"]
+                == "YES"
             ]
         )
 
@@ -253,6 +269,14 @@ def export_to_excel(df):
             move_status.to_excel(
                 writer,
                 sheet_name="Move Coil Status",
+                index=False
+            )
+
+        if not move_recommendation.empty:
+
+            move_recommendation.to_excel(
+                writer,
+                sheet_name="Move Recommendation",
                 index=False
             )
 
