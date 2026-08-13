@@ -16,9 +16,26 @@ def validate_data(df):
             )
 
     # Check duplicate order number
-    if "OrderNo + Item" in df.columns:
+   if (
+    "OrderNo" in df.columns
+    and "Item" in df.columns
+):
 
-        duplicate_rows = df[df["OrderNo"].duplicated()]
+    df["Order_Item_Key"] = (
+        df["OrderNo"].astype(str)
+        + "_"
+        + df["Item"].astype(str)
+    )
+
+    duplicate_rows = df[
+        df["Order_Item_Key"].duplicated()
+    ]
+
+    if len(duplicate_rows) > 0:
+
+        issues.append(
+            f"Duplicate Order+Item found: {len(duplicate_rows)} rows"
+        )
 
         if len(duplicate_rows) > 0:
             issues.append(
