@@ -7,11 +7,11 @@ def calculate(df):
     df = df.copy()
 
     # =====================================
-    # CONVERT NUMERIC COLUMNS
+    # CONVERT NUMERIC
     # =====================================
 
     numeric_columns = [
-        "Need",
+        "Ord QTY+",
         "Remain Insert",
         "Slab Confirm",
         "Other+",
@@ -20,7 +20,8 @@ def calculate(df):
         "P&O WP",
         "OSP+",
         "Suspend+",
-        "Rdy Shp+"
+        "Rdy Shp+",
+        "NC COIL"
     ]
 
     for col in numeric_columns:
@@ -33,145 +34,184 @@ def calculate(df):
             ).fillna(0)
 
     # =====================================
-    # OUTSTANDING
+    # SPEC KEY
+    # = I + J + K + L + N
     # =====================================
 
-    if "Need" in df.columns:
+    required_cols = [
+        "Com.SG",
+        "Equi  Grade",
+        "EndUse",
+        "Thk",
+        "Cert. Cust."
+    ]
 
-        df["Outstanding"] = df["Need"]
+    if all(col in df.columns for col in required_cols):
+
+        df["SPEC_KEY"] = (
+            df["Com.SG"].astype(str)
+            + df["Equi  Grade"].astype(str)
+            + df["EndUse"].astype(str)
+            + df["Thk"].astype(str)
+            + df["Cert. Cust."].astype(str)
+        )
+
+    else:
+
+        df["SPEC_KEY"] = ""
+
+    # =====================================
+    # NC
+    # =====================================
+
+    if "NC COIL" in df.columns:
+
+        df["NC"] = df["NC COIL"]
+
+    else:
+
+        df["NC"] = 0
+
+    # =====================================
+    # Other+Suspend+
+    # =====================================
+
+    df["Other_Suspend"] = (
+        df.get("Other+", 0)
+        + df.get("Suspend+", 0)
+    )
+
+    # =====================================
+    # Remain Insert+Slab Confirm
+    # =====================================
+
+    df["Remain_Insert_Slab_Confirm"] = (
+        df.get("Remain Insert", 0)
+        + df.get("Slab Confirm", 0)
+    )
+
+    # =====================================
+    # Sample+Test+PO WP+Rdy Shp
+    # =====================================
+
+    df["Sample_Test_WP_Rdy"] = (
+        df.get("Sample+", 0)
+        + df.get("Test+", 0)
+        + df.get("P&O WP", 0)
+        + df.get("Rdy Shp+", 0)
+    )
+
+    # =====================================
+    # Coil Inv
+    # =====================================
+
+    df["Coil_Inv"] = (
+        df["Other_Suspend"]
+        + df["Sample_Test_WP_Rdy"]
+    )
+
+    # =====================================
+    # Sum
+    # =====================================
+
+    df["Sum"] = (
+        df["Remain_Insert_Slab_Confirm"]
+        + df["Coil_Inv"]
+    )
+
+    # =====================================
+    # Outstanding
+    # =====================================
+
+    if "Ord QTY+" in df.columns:
+
+        df["Outstanding"] = (
+            df["Ord QTY+"]
+            - df["Sum"]
+        )
 
     else:
 
         df["Outstanding"] = 0
 
     # =====================================
-    # COIL INVENTORY
+    # Production Add
+    # Excel:
+    # IF((NC-CoilInv)<4,0,(NC-CoilInv))
     # =====================================
 
-    inventory_columns = [
-        "Other+",
-        "Sample+",
-        "Test+",
-        "P&O WP",
-        "OSP+",
-        "Suspend+",
-        "Rdy Shp+"
-    ]
-
-    available_inventory = [
-        col
-        for col in inventory_columns
-        if col in df.columns
-    ]
-
-    if len(available_inventory) > 0:
-
-        df["Coil_Inv"] = (
-            df[available_inventory]
-            .sum(axis=1)
-        )
-
-    else:
-
-        df["Coil_Inv"] = 0
-
-    # =====================================
-    # PRODUCTION ADD
-    # =====================================
-
-    df["Production_Add"] = np.maximum(
+    df["Production_Add"] = np.where(
+        (df["NC"] - df["Coil_Inv"]) < 4,
         0,
-        df["Outstanding"]
-        - df["Coil_Inv"]
+        (df["NC"] - df["Coil_Inv"])
     )
 
     # =====================================
-    # REMAINING COIL
+    # Remaining Coil
     # =====================================
 
-    df["Remaining_Coil"] = np.maximum(
-        0,
+    remaining = np.where(
+        df["NC"] > 3.999,
+        df["Coil_Inv"] - df["NC"],
         df["Coil_Inv"]
-        - df["Outstanding"]
+    )
+
+    remaining = np.maximum(
+        0,
+        remaining
+    )
+
+    df["Remaining_Coil"] = np.where(
+        remaining < 4,
+        0,
+        remaining
     )
 
     # =====================================
-    # MOVE COIL
+    # Remaining Coil + Move
     # =====================================
 
-    if "Rdy Shp+" in df.columns:
+    move_value = np.where(
 
-        df["Move_Coil"] = df["Rdy Shp+"]
+        df["NC"] <= 3.999,
 
-    else:
+        df["Remaining_Coil"],
 
-        df["Move_Coil"] = 0
+        np.where(
 
-    # =====================================
-    # INVENTORY COVERAGE
-    # =====================================
+            df["NC"] <= df["Outstanding"],
 
-    df["Inventory_Coverage_Pct"] = np.where(
-        df["Outstanding"] > 0,
-        (
-            df["Coil_Inv"]
-            / df["Outstanding"]
-        ) * 100,
-        0
+            df["Remaining_Coil"],
+
+            np.maximum(
+                0,
+                df["Remaining_Coil"]
+                - (
+                    df["NC"]
+                    - df["Outstanding"]
+                )
+            )
+        )
+    )
+
+    df["Remaining_Coil_Move"] = np.where(
+        move_value < 4,
+        0,
+        move_value
     )
 
     # =====================================
-    # ORDER STATUS
+    # Order+
     # =====================================
 
-    df["Order_Status"] = np.where(
-        df["Production_Add"] > 0,
-        "OPEN",
-        "CLOSED"
-    )
-
-    # =====================================
-    # HIGH RISK FLAG
-    # =====================================
-
-    df["High_Risk"] = np.where(
-        df["Production_Add"] > 0,
+    df["Order_Plus"] = np.where(
+        df["Production_Add"] > 3.999,
         "YES",
         "NO"
     )
 
     # =====================================
-    # ORDER ITEM KEY
+    # Close Order
     # =====================================
 
-    if (
-        "OrderNo" in df.columns
-        and "Item" in df.columns
-    ):
-
-        df["Order_Item_Key"] = (
-            df["OrderNo"].astype(str)
-            + "_"
-            + df["Item"].astype(str)
-        )
-
-    # =====================================
-    # BUYER CUSTOMER KEY
-    # =====================================
-
-    if (
-        "Buyer" in df.columns
-        and "End Cust." in df.columns
-    ):
-
-        df["Buyer_Customer"] = (
-            df["Buyer"].astype(str)
-            + "_"
-            + df["End Cust."].astype(str)
-        )
-
-    # =====================================
-    # RETURN RESULT
-    # =====================================
-
-    return df
+    df["Close_Order"] = 
