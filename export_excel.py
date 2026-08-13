@@ -1,97 +1,227 @@
+import io
 import pandas as pd
-import numpy as np
 
 
-def calculate(df):
+def export_to_excel(df):
 
-    df = df.copy()
+    output = io.BytesIO()
 
-    if "NC COIL" in df.columns:
-        df["NC"] = pd.to_numeric(
-            df["NC COIL"],
-            errors="coerce"
-        ).fillna(0)
-    else:
-        df["NC"] = 0
+    # =====================================
+    # EXECUTIVE SUMMARY
+    # =====================================
 
-    for col in [
-        "Ord QTY+",
-        "Remain Insert",
-        "Slab Confirm",
-        "Other+",
-        "Sample+",
-        "Test+",
-        "P&O WP",
-        "Suspend+",
-        "Rdy Shp+"
-    ]:
-        if col in df.columns:
-            df[col] = pd.to_numeric(
-                df[col],
-                errors="coerce"
-            ).fillna(0)
+    summary = pd.DataFrame({
 
-    df["Other_Suspend"] = (
-        df.get("Other+", 0)
-        + df.get("Suspend+", 0)
-    )
+        "Metric": [
 
-    df["Sample_Test_WP_Rdy"] = (
-        df.get("Sample+", 0)
-        + df.get("Test+", 0)
-        + df.get("P&O WP", 0)
-        + df.get("Rdy Shp+", 0)
-    )
+            "Outstanding",
+            "Coil Inventory",
+            "Production Add",
+            "Remaining Coil",
+            "Move Available",
+            "NC",
+            "Open Orders",
+            "Closed Orders",
+            "Total Orders",
+            "Total Buyers",
+            "Total Customers"
 
-    df["Remain_Insert_Slab_Confirm"] = (
-        df.get("Remain Insert", 0)
-        + df.get("Slab Confirm", 0)
-    )
+        ],
 
-    df["Coil_Inv"] = (
-        df["Other_Suspend"]
-        + df["Sample_Test_WP_Rdy"]
-    )
+        "Value": [
 
-    df["Sum"] = (
-        df["Remain_Insert_Slab_Confirm"]
-        + df["Coil_Inv"]
-    )
+            df["Outstanding"].sum()
+            if "Outstanding" in df.columns
+            else 0,
 
-    if "Ord QTY+" in df.columns:
-        df["Outstanding"] = (
-            df["Ord QTY+"]
-            - df["Sum"]
+            df["Coil_Inv"].sum()
+            if "Coil_Inv" in df.columns
+            else 0,
+
+            df["Production_Add"].sum()
+            if "Production_Add" in df.columns
+            else 0,
+
+            df["Remaining_Coil"].sum()
+            if "Remaining_Coil" in df.columns
+            else 0,
+
+            df["Move_Available"].sum()
+            if "Move_Available" in df.columns
+            else 0,
+
+            df["NC"].sum()
+            if "NC" in df.columns
+            else 0,
+
+            (
+                df["Close_Order"] == "Failed"
+            ).sum()
+            if "Close_Order" in df.columns
+            else 0,
+
+            (
+                df["Close_Order"] == "ปิด"
+            ).sum()
+            if "Close_Order" in df.columns
+            else 0,
+
+            len(df),
+
+            df["Buyer"].nunique()
+            if "Buyer" in df.columns
+            else 0,
+
+            df["End Cust."].nunique()
+            if "End Cust." in df.columns
+            else 0
+
+        ]
+
+    })
+
+    # =====================================
+    # BUYER SUMMARY
+    # =====================================
+
+    buyer_summary = pd.DataFrame()
+
+    if (
+        "Buyer" in df.columns
+        and "Outstanding" in df.columns
+    ):
+
+        buyer_summary = (
+            df.groupby("Buyer")
+            .agg({
+
+                "Outstanding": "sum",
+
+                "Production_Add": "sum",
+
+                "NC": "sum"
+
+            })
+            .reset_index()
+            .sort_values(
+                "Outstanding",
+                ascending=False
+            )
         )
-    else:
-        df["Outstanding"] = 0
 
-    df["Production_Add"] = np.where(
-        (df["NC"] - df["Coil_Inv"]) < 4,
-        0,
-        (df["NC"] - df["Coil_Inv"])
-    )
+    # =====================================
+    # CUSTOMER SUMMARY
+    # =====================================
 
-    df["Remaining_Coil"] = np.maximum(
-        0,
-        df["Coil_Inv"] - df["NC"]
-    )
+    customer_summary = pd.DataFrame()
 
-    df["Move_Coil"] = df.get(
-        "Rdy Shp+",
-        0
-    )
+    if (
+        "End Cust." in df.columns
+        and "Outstanding" in df.columns
+    ):
 
-    df["Order_Status"] = np.where(
-        df["Production_Add"] > 0,
-        "OPEN",
-        "CLOSED"
-    )
+        customer_summary = (
+            df.groupby("End Cust.")
+            .agg({
 
-    df["High_Risk"] = np.where(
-        df["Production_Add"] > 0,
-        "YES",
-        "NO"
-    )
+                "Outstanding": "sum",
 
-    return df
+                "Production_Add": "sum",
+
+                "NC": "sum"
+
+            })
+            .reset_index()
+            .sort_values(
+                "Outstanding",
+                ascending=False
+            )
+        )
+
+    # =====================================
+    # MOVE STATUS
+    # =====================================
+
+    move_status = pd.DataFrame()
+
+    if "Move_Coil_Result" in df.columns:
+
+        move_status = (
+            df["Move_Coil_Result"]
+            .value_counts()
+            .reset_index()
+        )
+
+        move_status.columns = [
+            "Move Status",
+            "Count"
+        ]
+
+    # =====================================
+    # HIGH RISK
+    # =====================================
+
+    risk_df = pd.DataFrame()
+
+    if "High_Risk" in df.columns:
+
+        risk_df = df[
+            df["High_Risk"] == "YES"
+        ]
+
+    # =====================================
+    # EXPORT
+    # =====================================
+
+    with pd.ExcelWriter(
+        output,
+        engine="openpyxl"
+    ) as writer:
+
+        summary.to_excel(
+            writer,
+            sheet_name="Executive Summary",
+            index=False
+        )
+
+        df.to_excel(
+            writer,
+            sheet_name="Data",
+            index=False
+        )
+
+        if not buyer_summary.empty:
+
+            buyer_summary.to_excel(
+                writer,
+                sheet_name="Buyer Summary",
+                index=False
+            )
+
+        if not customer_summary.empty:
+
+            customer_summary.to_excel(
+                writer,
+                sheet_name="Customer Summary",
+                index=False
+            )
+
+        if not move_status.empty:
+
+            move_status.to_excel(
+                writer,
+                sheet_name="Move Status",
+                index=False
+            )
+
+        if not risk_df.empty:
+
+            risk_df.to_excel(
+                writer,
+                sheet_name="High Risk Orders",
+                index=False
+            )
+
+    output.seek(0)
+
+    return output
