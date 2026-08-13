@@ -92,6 +92,15 @@ def show_dashboard(df):
         else 0
     )
 
+    k5.metric(
+    "Closed Orders",
+    (
+        df["Order_Status"]
+        == "CLOSED"
+    ).sum()
+    if "Order_Status" in df.columns
+    else 0
+)
     st.divider()
 
     # ==========================
