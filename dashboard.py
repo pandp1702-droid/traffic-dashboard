@@ -7,18 +7,21 @@ def show_dashboard(df):
     st.markdown(
         """
         <style>
+
         div[data-testid="metric-container"] {
             background-color: #f8f9fa;
             border: 1px solid #d0d7de;
             padding: 15px;
             border-radius: 12px;
         }
+
         </style>
         """,
         unsafe_allow_html=True
     )
 
     st.title("🚛 SSI Traffic Management Dashboard")
+
     st.caption(
         "Upload SAP Export → Analyze → Dashboard → Export Report"
     )
@@ -32,13 +35,13 @@ def show_dashboard(df):
         ]
     )
 
-    # =====================================
-    # EXECUTIVE
-    # =====================================
+    # ==================================================
+    # EXECUTIVE TAB
+    # ==================================================
 
     with tab1:
 
-        st.subheader("SSI KPI")
+        st.subheader("SSI Traffic KPI")
 
         k1, k2, k3, k4 = st.columns(4)
 
@@ -120,7 +123,9 @@ def show_dashboard(df):
 
         st.divider()
 
-        # Move Coil Status
+        # =====================================
+        # MOVE COIL STATUS
+        # =====================================
 
         if "Move_Coil_Result" in df.columns:
 
@@ -151,38 +156,42 @@ def show_dashboard(df):
                 use_container_width=True
             )
 
-        # Close Order Status
+        # =====================================
+        # AGING DASHBOARD
+        # =====================================
 
-        if "Close_Order" in df.columns:
+        if "Aging_Group" in df.columns:
 
-            status_df = (
-                df["Close_Order"]
+            aging_df = (
+                df["Aging_Group"]
                 .value_counts()
                 .reset_index()
             )
 
-            status_df.columns = [
-                "Status",
+            aging_df.columns = [
+                "Aging",
                 "Count"
             ]
 
             st.subheader(
-                "Close Order Status"
+                "Aging Dashboard"
             )
 
-            fig_status = px.pie(
-                status_df,
-                names="Status",
+            fig_aging = px.pie(
+                aging_df,
+                names="Aging",
                 values="Count",
                 hole=0.5
             )
 
             st.plotly_chart(
-                fig_status,
+                fig_aging,
                 use_container_width=True
             )
 
-        # Grade Analysis
+        # =====================================
+        # GRADE ANALYSIS
+        # =====================================
 
         if (
             "Com.SG" in df.columns
@@ -217,13 +226,36 @@ def show_dashboard(df):
                 use_container_width=True
             )
 
-    # =====================================
-    # BUYER
-    # =====================================
+        # =====================================
+        # HIGH RISK ORDERS
+        # =====================================
+
+        if "High_Risk" in df.columns:
+
+            risk_df = (
+                df[
+                    df["High_Risk"] == "YES"
+                ]
+            )
+
+            st.subheader(
+                "High Risk Orders"
+            )
+
+            st.dataframe(
+                risk_df.head(100),
+                use_container_width=True
+            )
+
+    # ==================================================
+    # BUYER TAB
+    # ==================================================
 
     with tab2:
 
-        st.subheader("Buyer Summary")
+        st.subheader(
+            "Buyer Scorecard"
+        )
 
         if (
             "Buyer" in df.columns
@@ -235,7 +267,8 @@ def show_dashboard(df):
                 .agg({
                     "Outstanding": "sum",
                     "Production_Add": "sum",
-                    "NC": "sum"
+                    "NC": "sum",
+                    "Move_Available": "sum"
                 })
                 .reset_index()
                 .sort_values(
@@ -261,13 +294,15 @@ def show_dashboard(df):
                 use_container_width=True
             )
 
-    # =====================================
-    # CUSTOMER
-    # =====================================
+    # ==================================================
+    # CUSTOMER TAB
+    # ==================================================
 
     with tab3:
 
-        st.subheader("Customer Summary")
+        st.subheader(
+            "Customer Summary"
+        )
 
         if (
             "End Cust." in df.columns
@@ -305,16 +340,18 @@ def show_dashboard(df):
                 use_container_width=True
             )
 
-    # =====================================
-    # DETAIL
-    # =====================================
+    # ==================================================
+    # DETAIL TAB
+    # ==================================================
 
     with tab4:
 
-        st.subheader("Detail Data")
+        st.subheader(
+            "Detail Data"
+        )
 
         st.dataframe(
             df,
-            use_container_width=True,
-            height=700
+            height=700,
+            use_container_width=True
         )
