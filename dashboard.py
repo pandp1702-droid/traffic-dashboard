@@ -157,4 +157,164 @@ def show_dashboard(df):
             df.groupby("End Cust.")["Outstanding"]
             .sum()
             .reset_index()
-            .sort_values
+            .sort_values(
+                "Outstanding",
+                ascending=False
+            )
+            .head(10)
+        )
+
+        st.subheader("Top 10 Outstanding By Customer")
+
+        fig2 = px.bar(
+            customer_df,
+            x="End Cust.",
+            y="Outstanding",
+            color="Outstanding"
+        )
+
+        st.plotly_chart(
+            fig2,
+            use_container_width=True
+        )
+
+    # =====================================
+    # MOVE COIL BY BUYER
+    # =====================================
+
+    if (
+        "Buyer" in df.columns
+        and "Move_Coil" in df.columns
+    ):
+
+        move_df = (
+            df.groupby("Buyer")["Move_Coil"]
+            .sum()
+            .reset_index()
+            .sort_values(
+                "Move_Coil",
+                ascending=False
+            )
+            .head(10)
+        )
+
+        st.subheader("Top 10 Move Coil By Buyer")
+
+        fig3 = px.bar(
+            move_df,
+            x="Buyer",
+            y="Move_Coil",
+            color="Move_Coil"
+        )
+
+        st.plotly_chart(
+            fig3,
+            use_container_width=True
+        )
+
+    # =====================================
+    # OUTSTANDING BY GRADE
+    # =====================================
+
+    if (
+        "Com.SG" in df.columns
+        and "Outstanding" in df.columns
+    ):
+
+        grade_df = (
+            df.groupby("Com.SG")["Outstanding"]
+            .sum()
+            .reset_index()
+            .sort_values(
+                "Outstanding",
+                ascending=False
+            )
+            .head(10)
+        )
+
+        st.subheader("Outstanding By Grade")
+
+        fig4 = px.bar(
+            grade_df,
+            x="Com.SG",
+            y="Outstanding",
+            color="Outstanding"
+        )
+
+        st.plotly_chart(
+            fig4,
+            use_container_width=True
+        )
+
+    # =====================================
+    # OUTSTANDING BY THICKNESS
+    # =====================================
+
+    if (
+        "Thk" in df.columns
+        and "Outstanding" in df.columns
+    ):
+
+        thk_df = (
+            df.groupby("Thk")["Outstanding"]
+            .sum()
+            .reset_index()
+        )
+
+        st.subheader("Outstanding By Thickness")
+
+        fig5 = px.bar(
+            thk_df,
+            x="Thk",
+            y="Outstanding"
+        )
+
+        st.plotly_chart(
+            fig5,
+            use_container_width=True
+        )
+
+    # =====================================
+    # ORDER STATUS
+    # =====================================
+
+    if "Order_Status" in df.columns:
+
+        status_df = (
+            df["Order_Status"]
+            .value_counts()
+            .reset_index()
+        )
+
+        status_df.columns = [
+            "Status",
+            "Count"
+        ]
+
+        st.subheader("Order Status")
+
+        fig6 = px.pie(
+            status_df,
+            names="Status",
+            values="Count",
+            hole=0.4
+        )
+
+        st.plotly_chart(
+            fig6,
+            use_container_width=True
+        )
+
+    st.divider()
+
+    # =====================================
+    # DATA PREVIEW
+    # =====================================
+
+    st.subheader("Data Preview")
+
+    st.dataframe(
+        df,
+        use_container_width=True,
+        height=500
+    )
