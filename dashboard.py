@@ -4,147 +4,317 @@ import plotly.express as px
 
 def show_dashboard(df):
 
-    st.title("SSI Traffic Dashboard")
-
-    # KPI
-    col1, col2, col3, col4 = st.columns(4)
-
-    col1.metric(
-        "Orders",
-        len(df)
+    st.markdown(
+        """
+        <style>
+        div[data-testid="metric-container"] {
+            background-color: #f8f9fa;
+            border: 1px solid #d0d7de;
+            padding: 15px;
+            border-radius: 12px;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
     )
 
-    col2.metric(
-        "Outstanding",
-        round(
-            df["Outstanding"].sum(),
-            2
-        )
-        if "Outstanding" in df.columns
-        else 0
+    st.title("🚛 SSI Traffic Management Dashboard")
+    st.caption(
+        "Upload SAP Export → Analyze → Dashboard → Export Report"
     )
 
-    col3.metric(
-        "Production Add",
-        round(
-            df["Production_Add"].sum(),
-            2
-        )
-        if "Production_Add" in df.columns
-        else 0
-    )
-
-    col4.metric(
-        "NC Coil",
-        round(
-            df["NC"].sum(),
-            2
-        )
-        if "NC" in df.columns
-        else 0
-    )
-
-    st.divider()
-
-    # Move Coil Status
-    if "Move_Coil_Result" in df.columns:
-
-        move_status = (
-            df["Move_Coil_Result"]
-            .value_counts()
-            .reset_index()
-        )
-
-        move_status.columns = [
-            "Status",
-            "Count"
+    tab1, tab2, tab3, tab4 = st.tabs(
+        [
+            "Executive",
+            "Buyer",
+            "Customer",
+            "Detail"
         ]
-
-        st.subheader(
-            "Move Coil Status"
-        )
-
-        fig_move = px.pie(
-            move_status,
-            names="Status",
-            values="Count"
-        )
-
-        st.plotly_chart(
-            fig_move,
-            use_container_width=True
-        )
-
-    # Buyer Chart
-    if (
-        "Buyer" in df.columns
-        and "Outstanding" in df.columns
-    ):
-
-        buyer_df = (
-            df.groupby("Buyer")["Outstanding"]
-            .sum()
-            .reset_index()
-            .sort_values(
-                "Outstanding",
-                ascending=False
-            )
-            .head(10)
-        )
-
-        st.subheader(
-            "Top 10 Outstanding By Buyer"
-        )
-
-        fig_buyer = px.bar(
-            buyer_df,
-            x="Buyer",
-            y="Outstanding"
-        )
-
-        st.plotly_chart(
-            fig_buyer,
-            use_container_width=True
-        )
-
-    # Customer Chart
-    if (
-        "End Cust." in df.columns
-        and "Outstanding" in df.columns
-    ):
-
-        customer_df = (
-            df.groupby("End Cust.")["Outstanding"]
-            .sum()
-            .reset_index()
-            .sort_values(
-                "Outstanding",
-                ascending=False
-            )
-            .head(10)
-        )
-
-        st.subheader(
-            "Top 10 Outstanding By Customer"
-        )
-
-        fig_customer = px.bar(
-            customer_df,
-            x="End Cust.",
-            y="Outstanding"
-        )
-
-        st.plotly_chart(
-            fig_customer,
-            use_container_width=True
-        )
-
-    st.divider()
-
-    st.subheader("Data Preview")
-
-    st.dataframe(
-        df,
-        use_container_width=True,
-        height=500
     )
+
+    # =====================================
+    # EXECUTIVE
+    # =====================================
+
+    with tab1:
+
+        st.subheader("SSI KPI")
+
+        k1, k2, k3, k4 = st.columns(4)
+
+        k1.metric(
+            "Orders",
+            len(df)
+        )
+
+        k2.metric(
+            "Outstanding",
+            round(
+                df["Outstanding"].sum(),
+                2
+            )
+            if "Outstanding" in df.columns
+            else 0
+        )
+
+        k3.metric(
+            "Production Add",
+            round(
+                df["Production_Add"].sum(),
+                2
+            )
+            if "Production_Add" in df.columns
+            else 0
+        )
+
+        k4.metric(
+            "NC Coil",
+            round(
+                df["NC"].sum(),
+                2
+            )
+            if "NC" in df.columns
+            else 0
+        )
+
+        k5, k6, k7, k8 = st.columns(4)
+
+        k5.metric(
+            "Ready To Ship",
+            round(
+                df["Ready_To_Ship"].sum(),
+                2
+            )
+            if "Ready_To_Ship" in df.columns
+            else 0
+        )
+
+        k6.metric(
+            "Total Coil",
+            round(
+                df["Total_Coil"].sum(),
+                2
+            )
+            if "Total_Coil" in df.columns
+            else 0
+        )
+
+        k7.metric(
+            "Remaining Coil",
+            round(
+                df["Remaining_Coil"].sum(),
+                2
+            )
+            if "Remaining_Coil" in df.columns
+            else 0
+        )
+
+        k8.metric(
+            "Old Orders",
+            (
+                df["Old_Order"] == "YES"
+            ).sum()
+            if "Old_Order" in df.columns
+            else 0
+        )
+
+        st.divider()
+
+        # Move Coil Status
+
+        if "Move_Coil_Result" in df.columns:
+
+            move_status = (
+                df["Move_Coil_Result"]
+                .value_counts()
+                .reset_index()
+            )
+
+            move_status.columns = [
+                "Status",
+                "Count"
+            ]
+
+            st.subheader(
+                "Move Coil Status"
+            )
+
+            fig_move = px.pie(
+                move_status,
+                names="Status",
+                values="Count",
+                hole=0.5
+            )
+
+            st.plotly_chart(
+                fig_move,
+                use_container_width=True
+            )
+
+        # Close Order Status
+
+        if "Close_Order" in df.columns:
+
+            status_df = (
+                df["Close_Order"]
+                .value_counts()
+                .reset_index()
+            )
+
+            status_df.columns = [
+                "Status",
+                "Count"
+            ]
+
+            st.subheader(
+                "Close Order Status"
+            )
+
+            fig_status = px.pie(
+                status_df,
+                names="Status",
+                values="Count",
+                hole=0.5
+            )
+
+            st.plotly_chart(
+                fig_status,
+                use_container_width=True
+            )
+
+        # Grade Analysis
+
+        if (
+            "Com.SG" in df.columns
+            and "Outstanding" in df.columns
+        ):
+
+            grade_df = (
+                df.groupby("Com.SG")
+                ["Outstanding"]
+                .sum()
+                .reset_index()
+                .sort_values(
+                    "Outstanding",
+                    ascending=False
+                )
+                .head(15)
+            )
+
+            st.subheader(
+                "Outstanding By Grade"
+            )
+
+            fig_grade = px.bar(
+                grade_df,
+                x="Com.SG",
+                y="Outstanding",
+                color="Outstanding"
+            )
+
+            st.plotly_chart(
+                fig_grade,
+                use_container_width=True
+            )
+
+    # =====================================
+    # BUYER
+    # =====================================
+
+    with tab2:
+
+        st.subheader("Buyer Summary")
+
+        if (
+            "Buyer" in df.columns
+            and "Outstanding" in df.columns
+        ):
+
+            buyer_df = (
+                df.groupby("Buyer")
+                .agg({
+                    "Outstanding": "sum",
+                    "Production_Add": "sum",
+                    "NC": "sum"
+                })
+                .reset_index()
+                .sort_values(
+                    "Outstanding",
+                    ascending=False
+                )
+            )
+
+            st.dataframe(
+                buyer_df,
+                use_container_width=True
+            )
+
+            fig_buyer = px.bar(
+                buyer_df.head(20),
+                x="Buyer",
+                y="Outstanding",
+                color="Outstanding"
+            )
+
+            st.plotly_chart(
+                fig_buyer,
+                use_container_width=True
+            )
+
+    # =====================================
+    # CUSTOMER
+    # =====================================
+
+    with tab3:
+
+        st.subheader("Customer Summary")
+
+        if (
+            "End Cust." in df.columns
+            and "Outstanding" in df.columns
+        ):
+
+            customer_df = (
+                df.groupby("End Cust.")
+                .agg({
+                    "Outstanding": "sum",
+                    "Production_Add": "sum",
+                    "NC": "sum"
+                })
+                .reset_index()
+                .sort_values(
+                    "Outstanding",
+                    ascending=False
+                )
+            )
+
+            st.dataframe(
+                customer_df,
+                use_container_width=True
+            )
+
+            fig_customer = px.bar(
+                customer_df.head(20),
+                x="End Cust.",
+                y="Outstanding",
+                color="Outstanding"
+            )
+
+            st.plotly_chart(
+                fig_customer,
+                use_container_width=True
+            )
+
+    # =====================================
+    # DETAIL
+    # =====================================
+
+    with tab4:
+
+        st.subheader("Detail Data")
+
+        st.dataframe(
+            df,
+            use_container_width=True,
+            height=700
+        )
