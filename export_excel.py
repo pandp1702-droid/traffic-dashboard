@@ -7,7 +7,7 @@ def export_to_excel(df):
     output = io.BytesIO()
 
     # =====================================
-    # KPI CALCULATION
+    # KPI
     # =====================================
 
     outstanding = (
@@ -67,10 +67,7 @@ def export_to_excel(df):
     )
 
     avg_outstanding = (
-        round(
-            df["Outstanding"].mean(),
-            2
-        )
+        round(df["Outstanding"].mean(), 2)
         if "Outstanding" in df.columns
         else 0
     )
@@ -126,10 +123,11 @@ def export_to_excel(df):
             coverage
 
         ]
+
     })
 
     # =====================================
-    # VALIDATION SUMMARY
+    # VALIDATION
     # =====================================
 
     validation_summary = pd.DataFrame({
@@ -153,49 +151,118 @@ def export_to_excel(df):
             closed_orders
 
         ]
+
     })
+
+    # =====================================
+    # BUYER SUMMARY
+    # =====================================
+
+    buyer_summary = pd.DataFrame()
+
+    if (
+        "Buyer" in df.columns
+        and "Outstanding" in df.columns
+    ):
+
+        buyer_summary = (
+            df.groupby("Buyer")
+            .agg({
+                "Outstanding": "sum",
+                "Production_Add": "sum",
+                "NC": "sum"
+            })
+            .reset_index()
+            .sort_values(
+                "Outstanding",
+                ascending=False
+            )
+        )
+
+    # =====================================
+    # CUSTOMER SUMMARY
+    # =====================================
+
+    customer_summary = pd.DataFrame()
+
+    if (
+        "End Cust." in df.columns
+        and "Outstanding" in df.columns
+    ):
+
+        customer_summary = (
+            df.groupby("End Cust.")
+            .agg({
+                "Outstanding": "sum",
+                "Production_Add": "sum",
+                "NC": "sum"
+            })
+            .reset_index()
+            .sort_values(
+                "Outstanding",
+                ascending=False
+            )
+        )
+
+    # =====================================
+    # HIGH RISK ORDERS
+    # =====================================
+
+    risk_df = pd.DataFrame()
+
+    if "High_Risk" in df.columns:
+
+        risk_df = df[
+            df["High_Risk"] == "YES"
+        ]
+
+    # =====================================
+    # MOVE COIL STATUS
+    # =====================================
+
+    move_status = pd.DataFrame()
+
+    if "Move_Coil_Result" in df.columns:
+
+        move_status = (
+            df["Move_Coil_Result"]
+            .value_counts()
+            .reset_index()
+        )
+
+        move_status.columns = [
+            "Status",
+            "Count"
+        ]
+
+    # =====================================
+    # EXPORT
+    # =====================================
 
     with pd.ExcelWriter(
         output,
         engine="openpyxl"
     ) as writer:
 
-        # Executive Summary
         executive_summary.to_excel(
             writer,
             sheet_name="Executive Summary",
             index=False
         )
 
-        # Validation
         validation_summary.to_excel(
             writer,
             sheet_name="Validation",
             index=False
         )
 
-        # Raw Data
         df.to_excel(
             writer,
             sheet_name="Data",
             index=False
         )
 
-        # Buyer Summary
-        if (
-            "Buyer" in df.columns
-            and "Outstanding" in df.columns
-        ):
-
-            buyer_summary = (
-                df.groupby("Buyer")["Outstanding"]
-                .sum()
-                .reset_index()
-                .sort_values(
-                    "Outstanding",
-                    ascending=False
-                )
-            )
+        if not buyer_summary.empty:
 
             buyer_summary.to_excel(
                 writer,
@@ -203,21 +270,7 @@ def export_to_excel(df):
                 index=False
             )
 
-        # Customer Summary
-        if (
-            "End Cust." in df.columns
-            and "Outstanding" in df.columns
-        ):
-
-            customer_summary = (
-                df.groupby("End Cust.")["Outstanding"]
-                .sum()
-                .reset_index()
-                .sort_values(
-                    "Outstanding",
-                    ascending=False
-                )
-            )
+        if not customer_summary.empty:
 
             customer_summary.to_excel(
                 writer,
@@ -225,11 +278,7 @@ def export_to_excel(df):
                 index=False
             )
 
-        # Grade Summary
-        if (
-            "Com.SG" in df.columns
-            and "Outstanding" in df.columns
-        ):
+        if "Com.SG" in df.columns:
 
             grade_summary = (
                 df.groupby("Com.SG")["Outstanding"]
@@ -247,33 +296,7 @@ def export_to_excel(df):
                 index=False
             )
 
-        # Width Summary
-        if (
-            "Wid" in df.columns
-            and "Outstanding" in df.columns
-        ):
-
-            width_summary = (
-                df.groupby("Wid")["Outstanding"]
-                .sum()
-                .reset_index()
-                .sort_values(
-                    "Outstanding",
-                    ascending=False
-                )
-            )
-
-            width_summary.to_excel(
-                writer,
-                sheet_name="Width Summary",
-                index=False
-            )
-
-        # Protocol Summary
-        if (
-            "Protocol" in df.columns
-            and "Outstanding" in df.columns
-        ):
+        if "Protocol" in df.columns:
 
             protocol_summary = (
                 df.groupby("Protocol")["Outstanding"]
@@ -291,12 +314,15 @@ def export_to_excel(df):
                 index=False
             )
 
-        # High Risk Orders
-        if "Production_Add" in df.columns:
+        if not move_status.empty:
 
-            risk_df = df[
-                df["Production_Add"] > 0
-            ]
+            move_status.to_excel(
+                writer,
+                sheet_name="Move Coil Status",
+                index=False
+            )
+
+        if not risk_df.empty:
 
             risk_df.to_excel(
                 writer,
