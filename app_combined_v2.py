@@ -6,7 +6,6 @@ from validation import validate_data
 from dashboard import show_dashboard
 from export_excel import export_to_excel
 
-
 # =====================================
 # PAGE CONFIG
 # =====================================
@@ -40,7 +39,7 @@ uploaded_file = st.file_uploader(
 )
 
 # =====================================
-# PROCESS
+# PROCESS FILE
 # =====================================
 
 if uploaded_file is not None:
@@ -58,7 +57,6 @@ if uploaded_file is not None:
     st.sidebar.header("🔍 Filters")
 
     # Buyer
-
     if "Buyer" in result.columns:
 
         buyer = st.sidebar.selectbox(
@@ -81,7 +79,6 @@ if uploaded_file is not None:
             ]
 
     # Customer
-
     if "End Cust." in result.columns:
 
         customer = st.sidebar.selectbox(
@@ -104,7 +101,6 @@ if uploaded_file is not None:
             ]
 
     # Grade
-
     if "Com.SG" in result.columns:
 
         grade = st.sidebar.selectbox(
@@ -127,7 +123,6 @@ if uploaded_file is not None:
             ]
 
     # Thickness
-
     if "Thk" in result.columns:
 
         thickness = st.sidebar.selectbox(
@@ -150,7 +145,6 @@ if uploaded_file is not None:
             ]
 
     # Shipment Month
-
     if "Shipment_Month" in result.columns:
 
         shipment_month = st.sidebar.selectbox(
@@ -173,6 +167,29 @@ if uploaded_file is not None:
                 == shipment_month
             ]
 
+    # SPEC KEY Filter
+    if "SPEC_KEY" in result.columns:
+
+        spec_key = st.sidebar.selectbox(
+            "SPEC KEY",
+            ["All"] +
+            sorted(
+                result["SPEC_KEY"]
+                .dropna()
+                .astype(str)
+                .unique()
+                .tolist()
+            )
+        )
+
+        if spec_key != "All":
+
+            result = result[
+                result["SPEC_KEY"]
+                .astype(str)
+                == spec_key
+            ]
+
     st.sidebar.markdown("---")
 
     # =====================================
@@ -181,12 +198,13 @@ if uploaded_file is not None:
 
     st.sidebar.header("🔎 Search")
 
-    order_search = st.sidebar.text_input(
+    # Order Search
+    search_order = st.sidebar.text_input(
         "Order No"
     )
 
     if (
-        order_search
+        search_order
         and "OrderNo" in result.columns
     ):
 
@@ -194,18 +212,19 @@ if uploaded_file is not None:
             result["OrderNo"]
             .astype(str)
             .str.contains(
-                order_search,
+                search_order,
                 case=False,
                 na=False
             )
         ]
 
-    product_search = st.sidebar.text_input(
+    # Product Search
+    search_product = st.sidebar.text_input(
         "Product Code"
     )
 
     if (
-        product_search
+        search_product
         and "Prod Cd" in result.columns
     ):
 
@@ -213,18 +232,19 @@ if uploaded_file is not None:
             result["Prod Cd"]
             .astype(str)
             .str.contains(
-                product_search,
+                search_product,
                 case=False,
                 na=False
             )
         ]
 
-    customer_search = st.sidebar.text_input(
+    # Customer Search
+    search_customer = st.sidebar.text_input(
         "Customer Search"
     )
 
     if (
-        customer_search
+        search_customer
         and "End Cust." in result.columns
     ):
 
@@ -232,11 +252,33 @@ if uploaded_file is not None:
             result["End Cust."]
             .astype(str)
             .str.contains(
-                customer_search,
+                search_customer,
                 case=False,
                 na=False
             )
         ]
+
+    # SPEC KEY Search
+    spec_search = st.sidebar.text_input(
+        "SPEC KEY Search"
+    )
+
+    if (
+        spec_search
+        and "SPEC_KEY" in result.columns
+    ):
+
+        result = result[
+            result["SPEC_KEY"]
+            .astype(str)
+            .str.contains(
+                spec_search,
+                case=False,
+                na=False
+            )
+        ]
+
+    st.sidebar.markdown("---")
 
     # =====================================
     # VALIDATION
