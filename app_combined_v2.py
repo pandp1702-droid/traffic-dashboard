@@ -26,6 +26,8 @@ if uploaded_file:
 
     result = calculate(df)
 
+    st.write(df.columns.tolist())
+
     validation = validate_data(result)
 
     if validation["status"] == "PASS":
