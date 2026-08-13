@@ -6,38 +6,60 @@ from validation import validate_data
 from dashboard import show_dashboard
 from export_excel import export_to_excel
 
+
+# =====================================
+# PAGE CONFIG
+# =====================================
+
 st.set_page_config(
     page_title="SSI Traffic Dashboard",
+    page_icon="📊",
     layout="wide"
 )
 
-st.title("SSI Traffic Dashboard")
+st.title("📊 SSI Traffic Management Dashboard")
+st.caption(
+    "Upload SAP Export → Calculate → Dashboard → Export Report"
+)
+
+# =====================================
+# SIDEBAR
+# =====================================
+
+st.sidebar.title("📌 Navigation")
+st.sidebar.markdown("---")
 
 uploaded_file = st.file_uploader(
     "Upload Excel File",
     type=["xlsx"]
 )
 
+# =====================================
+# LOAD DATA
+# =====================================
+
 if uploaded_file:
 
-    # READ EXCEL
-    df = pd.read_excel(uploaded_file)
+    with st.spinner("Loading file..."):
 
-    # CALCULATE
-    result = calculate(df)
+        df = pd.read_excel(uploaded_file)
 
-    # ==========================
-    # FILTERS
-    # ==========================
+        result = calculate(df)
 
-    st.sidebar.header("Filters")
+    # =====================================
+    # FILTER PANEL
+    # =====================================
+
+    st.sidebar.header("🔍 Filters")
+
+    # Buyer
 
     if "Buyer" in result.columns:
 
         buyer = st.sidebar.selectbox(
             "Buyer",
-            ["All"] +
-            sorted(
+            ["All"]
+            + sorted(
                 result["Buyer"]
                 .dropna()
                 .astype(str)
@@ -54,12 +76,14 @@ if uploaded_file:
                 == buyer
             ]
 
+    # Customer
+
     if "End Cust." in result.columns:
 
         customer = st.sidebar.selectbox(
             "Customer",
-            ["All"] +
-            sorted(
+            ["All"]
+            + sorted(
                 result["End Cust."]
                 .dropna()
                 .astype(str)
@@ -76,12 +100,14 @@ if uploaded_file:
                 == customer
             ]
 
+    # Grade
+
     if "Com.SG" in result.columns:
 
         grade = st.sidebar.selectbox(
             "Grade",
-            ["All"] +
-            sorted(
+            ["All"]
+            + sorted(
                 result["Com.SG"]
                 .dropna()
                 .astype(str)
@@ -98,12 +124,14 @@ if uploaded_file:
                 == grade
             ]
 
+    # Thickness
+
     if "Thk" in result.columns:
 
         thk = st.sidebar.selectbox(
             "Thickness",
-            ["All"] +
-            sorted(
+            ["All"]
+            + sorted(
                 result["Thk"]
                 .dropna()
                 .astype(str)
@@ -120,12 +148,14 @@ if uploaded_file:
                 == thk
             ]
 
+    # Shipment Month
+
     if "Shipment_Month" in result.columns:
 
         month = st.sidebar.selectbox(
             "Shipment Month",
-            ["All"] +
-            sorted(
+            ["All"]
+            + sorted(
                 result["Shipment_Month"]
                 .dropna()
                 .astype(str)
@@ -142,14 +172,16 @@ if uploaded_file:
                 == month
             ]
 
-    # ==========================
-    # SEARCH
-    # ==========================
+    st.sidebar.markdown("---")
 
-    st.sidebar.header("Search")
+    # =====================================
+    # SEARCH PANEL
+    # =====================================
+
+    st.sidebar.header("🔎 Search")
 
     search_order = st.sidebar.text_input(
-        "OrderNo"
+        "Order No."
     )
 
     if (
@@ -205,72 +237,77 @@ if uploaded_file:
             )
         ]
 
-    # ==========================
+    st.sidebar.markdown("---")
+
+    # =====================================
     # VALIDATION
-    # ==========================
+    # =====================================
 
     validation = validate_data(result)
 
     if validation["status"] == "PASS":
 
-        st.success(
-            "Validation Passed"
-        )
+        st.success("✅ Validation Passed")
 
     else:
 
         st.warning(
-            f"Issues Found : {validation['issue_count']}"
+            f"⚠ Issues Found : {validation['issue_count']}"
         )
 
         for issue in validation["issues"]:
-
             st.write(issue)
 
-    # ==========================
+    # =====================================
     # DASHBOARD
-    # ==========================
+    # =====================================
 
     show_dashboard(result)
 
-    # ==========================
+    # =====================================
     # DETAIL DATA
-    # ==========================
+    # =====================================
 
-    st.subheader("Detail Data")
+    with st.expander(
+        "📄 Detail Data",
+        expanded=False
+    ):
 
-    st.dataframe(
-        result,
-        use_container_width=True,
-        height=500
-    )
+        st.dataframe(
+            result,
+            use_container_width=True,
+            height=500
+        )
 
-    # ==========================
-    # EXPORT EXCEL
-    # ==========================
+    # =====================================
+    # EXPORT
+    # =====================================
 
-    st.subheader("Export Report")
+    st.markdown("---")
+    st.subheader("📥 Export Report")
 
     excel_file = export_to_excel(result)
 
-    st.download_button(
-        label="Export Excel",
-        data=excel_file,
-        file_name="Balance_Coil_Result.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    )
+    col1, col2 = st.columns(2)
 
-    # ==========================
-    # EXPORT CSV
-    # ==========================
+    with col1:
 
-    csv = result.to_csv(
-        index=False
-    ).encode("utf-8")
+        st.download_button(
+            label="📊 Export Excel",
+            data=excel_file,
+            file_name="Balance_Coil_Result.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
 
-    st.download_button(
-        label="Export CSV",
-        data=csv,
-        file_name="Balance_Coil_Result.csv",
-        mime="text/csv"
-    )
+    with col2:
+
+        csv = result.to_csv(
+            index=False
+        ).encode("utf-8")
+
+        st.download_button(
+            label="📄 Export CSV",
+            data=csv,
+            file_name="Balance_Coil_Result.csv",
+            mime="text/csv"
+        )
