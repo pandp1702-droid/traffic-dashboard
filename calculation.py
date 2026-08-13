@@ -64,7 +64,7 @@ def calculate(df):
         if col in df.columns
     ]
 
-    if available_inventory:
+    if len(available_inventory) > 0:
 
         df["Coil_Inv"] = (
             df[available_inventory]
@@ -108,26 +108,70 @@ def calculate(df):
         df["Move_Coil"] = 0
 
     # =====================================
-    # INVENTORY COVERAGE %
+    # INVENTORY COVERAGE
+    # =====================================
+
+    df["Inventory_Coverage_Pct"] = np.where(
+        df["Outstanding"] > 0,
+        (
+            df["Coil_Inv"]
+            / df["Outstanding"]
+        ) * 100,
+        0
+    )
+
+    # =====================================
+    # ORDER STATUS
+    # =====================================
+
+    df["Order_Status"] = np.where(
+        df["Production_Add"] > 0,
+        "OPEN",
+        "CLOSED"
+    )
+
+    # =====================================
+    # HIGH RISK FLAG
+    # =====================================
+
+    df["High_Risk"] = np.where(
+        df["Production_Add"] > 0,
+        "YES",
+        "NO"
+    )
+
+    # =====================================
+    # ORDER ITEM KEY
     # =====================================
 
     if (
-        "Outstanding" in df.columns
-        and "Coil_Inv" in df.columns
+        "OrderNo" in df.columns
+        and "Item" in df.columns
     ):
 
-        df["Inventory_Coverage_Pct"] = np.where(
-            df["Outstanding"] > 0,
-            (
-                df["Coil_Inv"]
-                / df["Outstanding"]
-            ) * 100,
-            0
+        df["Order_Item_Key"] = (
+            df["OrderNo"].astype(str)
+            + "_"
+            + df["Item"].astype(str)
         )
 
-    else:
+    # =====================================
+    # BUYER CUSTOMER KEY
+    # =====================================
 
-        df["Inventory_Coverage_Pct"] = 0
+    if (
+        "Buyer" in df.columns
+        and "End Cust." in df.columns
+    ):
+
+        df["Buyer_Customer"] = (
+            df["Buyer"].astype(str)
+            + "_"
+            + df["End Cust."].astype(str)
+        )
 
     # =====================================
-    #
+    # RETURN RESULT
+    # =====================================
+
+    return df
