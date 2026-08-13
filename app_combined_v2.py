@@ -6,6 +6,7 @@ from validation import validate_data
 from dashboard import show_dashboard
 from export_excel import export_to_excel
 
+
 st.set_page_config(
     page_title="SSI Traffic Dashboard",
     layout="wide"
@@ -13,37 +14,42 @@ st.set_page_config(
 
 st.title("SSI Traffic Dashboard")
 
+
 uploaded_file = st.file_uploader(
     "Upload Excel File",
     type=["xlsx"]
 )
 
+
 if uploaded_file:
 
-    # ==========================
+    # =====================================
     # READ FILE
-    # ==========================
+    # =====================================
 
     df = pd.read_excel(uploaded_file)
 
-    # ==========================
+    # =====================================
     # CALCULATE
-    # ==========================
+    # =====================================
 
     result = calculate(df)
 
-    # ==========================
-    # FILTERS
-    # ==========================
+    # =====================================
+    # FILTER
+    # =====================================
 
     st.sidebar.header("Filters")
+
+    # Buyer
 
     if "Buyer" in result.columns:
 
         buyer = st.sidebar.selectbox(
             "Buyer",
             ["All"]
-            + sorted(
+            +
+            sorted(
                 result["Buyer"]
                 .dropna()
                 .astype(str)
@@ -60,12 +66,15 @@ if uploaded_file:
                 == buyer
             ]
 
+    # Customer
+
     if "End Cust." in result.columns:
 
         customer = st.sidebar.selectbox(
             "Customer",
             ["All"]
-            + sorted(
+            +
+            sorted(
                 result["End Cust."]
                 .dropna()
                 .astype(str)
@@ -82,12 +91,15 @@ if uploaded_file:
                 == customer
             ]
 
+    # Grade
+
     if "Com.SG" in result.columns:
 
         grade = st.sidebar.selectbox(
             "Grade",
             ["All"]
-            + sorted(
+            +
+            sorted(
                 result["Com.SG"]
                 .dropna()
                 .astype(str)
@@ -104,12 +116,15 @@ if uploaded_file:
                 == grade
             ]
 
+    # Thickness
+
     if "Thk" in result.columns:
 
         thk = st.sidebar.selectbox(
             "Thickness",
             ["All"]
-            + sorted(
+            +
+            sorted(
                 result["Thk"]
                 .dropna()
                 .astype(str)
@@ -126,101 +141,15 @@ if uploaded_file:
                 == thk
             ]
 
-    # ==========================
-    # SEARCH
-    # ==========================
+    # Shipment Month
 
-    st.sidebar.header("Search")
+    if "Shipment_Month" in result.columns:
 
-    search_order = st.sidebar.text_input(
-        "OrderNo"
-    )
-
-    if (
-        search_order
-        and "OrderNo" in result.columns
-    ):
-
-        result = result[
-            result["OrderNo"]
-            .astype(str)
-            .str.contains(
-                search_order,
-                case=False,
-                na=False
-            )
-        ]
-
-    search_product = st.sidebar.text_input(
-        "Product Code"
-    )
-
-    if (
-        search_product
-        and "Prod Cd" in result.columns
-    ):
-
-        result = result[
-            result["Prod Cd"]
-            .astype(str)
-            .str.contains(
-                search_product,
-                case=False,
-                na=False
-            )
-        ]
-
-    # ==========================
-    # VALIDATION
-    # ==========================
-
-    validation = validate_data(result)
-
-    if validation["status"] == "PASS":
-
-        st.success(
-            "Validation Passed"
-        )
-
-    else:
-
-        st.warning(
-            f"Issues Found: {validation['issue_count']}"
-        )
-
-        for issue in validation["issues"]:
-
-            st.write(issue)
-
-    # ==========================
-    # DASHBOARD
-    # ==========================
-
-    show_dashboard(result)
-
-    # ==========================
-    # DETAIL DATA
-    # ==========================
-
-    st.subheader(
-        "Detail Data"
-    )
-
-    st.dataframe(
-        result,
-        use_container_width=True,
-        height=500
-    )
-
-    # ==========================
-    # EXPORT EXCEL
-    # ==========================
-
-    excel_file = export_to_excel(result)
-
-    st.download_button(
-        label="Export Excel",
-        data=excel_file,
-        file_name="Balance_Coil_Result.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    )
+        month = st.sidebar.selectbox(
+            "Shipment Month",
+            ["All"]
+            +
+            sorted(
+                result["Shipment_Month"]
+                .dropna()
+                .astype(
