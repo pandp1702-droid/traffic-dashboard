@@ -6,38 +6,31 @@ def export_to_excel(df):
 
     output = io.BytesIO()
 
-    summary = pd.DataFrame({
-        "Metric": [
-            "Outstanding",
-            "Coil Inventory",
-            "Production Add",
-            "Move Coil"
-        ],
-        "Value": [
-            df["Outstanding"].sum(),
-            df["Coil_Inv"].sum(),
-            df["Production_Add"].sum(),
-            df["Move_Coil"].sum()
-        ]
-    })
+    summary = pd.DataFrame(
+        {
+            "Metric": [
+                "Outstanding",
+                "Coil Inventory",
+                "Production Add",
+                "Move Coil",
+                "Total Orders",
+                "Total Buyers",
+                "Total Customers",
+                "Open Orders",
+                "Closed Orders"
+            ],
+            "Value": [
 
-    with pd.ExcelWriter(
-        output,
-        engine="openpyxl"
-    ) as writer:
+                df["Outstanding"].sum()
+                if "Outstanding" in df.columns
+                else 0,
 
-        summary.to_excel(
-            writer,
-            sheet_name="Summary",
-            index=False
-        )
+                df["Coil_Inv"].sum()
+                if "Coil_Inv" in df.columns
+                else 0,
 
-        df.to_excel(
-            writer,
-            sheet_name="Data",
-            index=False
-        )
+                df["Production_Add"].sum()
+                if "Production_Add" in df.columns
+                else 0,
 
-    output.seek(0)
-
-    return output
+                df["Move_Coil"].sum
