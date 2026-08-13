@@ -20,15 +20,22 @@ uploaded_file = st.file_uploader(
 
 if uploaded_file:
 
-    # Read Excel
+    # ==========================
+    # READ FILE
+    # ==========================
+
     df = pd.read_excel(uploaded_file)
 
-    # Calculate
+    # ==========================
+    # CALCULATE
+    # ==========================
+
     result = calculate(df)
 
     # ==========================
-    # SIDEBAR FILTER
+    # FILTER
     # ==========================
+
     st.sidebar.header("Filters")
 
     # Buyer Filter
@@ -77,7 +84,56 @@ if uploaded_file:
                 == customer
             ]
 
-    # Search Order
+    # Grade Filter
+    if "Com.SG" in result.columns:
+
+        grade = st.sidebar.selectbox(
+            "Grade",
+            ["All"]
+            + sorted(
+                result["Com.SG"]
+                .dropna()
+                .astype(str)
+                .unique()
+                .tolist()
+            )
+        )
+
+        if grade != "All":
+
+            result = result[
+                result["Com.SG"]
+                .astype(str)
+                == grade
+            ]
+
+    # Thickness Filter
+    if "Thk" in result.columns:
+
+        thk = st.sidebar.selectbox(
+            "Thickness",
+            ["All"]
+            + sorted(
+                result["Thk"]
+                .dropna()
+                .astype(str)
+                .unique()
+                .tolist()
+            )
+        )
+
+        if thk != "All":
+
+            result = result[
+                result["Thk"]
+                .astype(str)
+                == thk
+            ]
+
+    # ==========================
+    # SEARCH
+    # ==========================
+
     st.sidebar.header("Search")
 
     search_order = st.sidebar.text_input(
@@ -99,7 +155,6 @@ if uploaded_file:
             )
         ]
 
-    # Search Product
     search_product = st.sidebar.text_input(
         "Product Code"
     )
@@ -119,9 +174,29 @@ if uploaded_file:
             )
         ]
 
+    search_customer = st.sidebar.text_input(
+        "Customer Search"
+    )
+
+    if (
+        search_customer
+        and "End Cust." in result.columns
+    ):
+
+        result = result[
+            result["End Cust."]
+            .astype(str)
+            .str.contains(
+                search_customer,
+                case=False,
+                na=False
+            )
+        ]
+
     # ==========================
     # VALIDATION
     # ==========================
+
     validation = validate_data(result)
 
     if validation["status"] == "PASS":
@@ -143,24 +218,26 @@ if uploaded_file:
     # ==========================
     # DASHBOARD
     # ==========================
+
     show_dashboard(result)
 
     # ==========================
     # DETAIL DATA
     # ==========================
+
     st.subheader("Detail Data")
 
     st.dataframe(
         result,
-        use_container_width=True
+        use_container_width=True,
+        height=500
     )
 
     # ==========================
-    # EXPORT EXCEL
+    # EXPORT
     # ==========================
-    excel_file = export_to_excel(
-        result
-    )
+
+    excel_file = export_to_excel(result)
 
     st.download_button(
         label="Export Excel",
