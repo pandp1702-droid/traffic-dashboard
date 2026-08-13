@@ -6,11 +6,17 @@ def calculate(df):
 
     df = df.copy()
 
-    # =====================================
-    # CONVERT NUMERIC
-    # =====================================
+    # NC
+    if "NC COIL" in df.columns:
+        df["NC"] = pd.to_numeric(
+            df["NC COIL"],
+            errors="coerce"
+        ).fillna(0)
+    else:
+        df["NC"] = 0
 
-    numeric_columns = [
+    # Convert columns
+    numeric_cols = [
         "Ord QTY+",
         "Remain Insert",
         "Slab Confirm",
@@ -18,27 +24,19 @@ def calculate(df):
         "Sample+",
         "Test+",
         "P&O WP",
-        "OSP+",
         "Suspend+",
-        "Rdy Shp+",
-        "NC COIL"
+        "Rdy Shp+"
     ]
 
-    for col in numeric_columns:
-
+    for col in numeric_cols:
         if col in df.columns:
-
             df[col] = pd.to_numeric(
                 df[col],
                 errors="coerce"
             ).fillna(0)
 
-    # =====================================
-    # SPEC KEY
-    # = I + J + K + L + N
-    # =====================================
-
-    required_cols = [
+    # Spec Key
+    required = [
         "Com.SG",
         "Equi  Grade",
         "EndUse",
@@ -46,8 +44,7 @@ def calculate(df):
         "Cert. Cust."
     ]
 
-    if all(col in df.columns for col in required_cols):
-
+    if all(col in df.columns for col in required):
         df["SPEC_KEY"] = (
             df["Com.SG"].astype(str)
             + df["Equi  Grade"].astype(str)
@@ -55,45 +52,22 @@ def calculate(df):
             + df["Thk"].astype(str)
             + df["Cert. Cust."].astype(str)
         )
-
     else:
-
         df["SPEC_KEY"] = ""
 
-    # =====================================
-    # NC
-    # =====================================
-
-    if "NC COIL" in df.columns:
-
-        df["NC"] = df["NC COIL"]
-
-    else:
-
-        df["NC"] = 0
-
-    # =====================================
-    # Other+Suspend+
-    # =====================================
-
+    # Other + Suspend
     df["Other_Suspend"] = (
         df.get("Other+", 0)
         + df.get("Suspend+", 0)
     )
 
-    # =====================================
-    # Remain Insert+Slab Confirm
-    # =====================================
-
+    # Remain Insert + Slab Confirm
     df["Remain_Insert_Slab_Confirm"] = (
         df.get("Remain Insert", 0)
         + df.get("Slab Confirm", 0)
     )
 
-    # =====================================
-    # Sample+Test+PO WP+Rdy Shp
-    # =====================================
-
+    # Sample + Test + PO WP + Ready Ship
     df["Sample_Test_WP_Rdy"] = (
         df.get("Sample+", 0)
         + df.get("Test+", 0)
@@ -101,65 +75,42 @@ def calculate(df):
         + df.get("Rdy Shp+", 0)
     )
 
-    # =====================================
-    # Coil Inv
-    # =====================================
-
+    # Coil Inventory
     df["Coil_Inv"] = (
         df["Other_Suspend"]
         + df["Sample_Test_WP_Rdy"]
     )
 
-    # =====================================
     # Sum
-    # =====================================
-
     df["Sum"] = (
         df["Remain_Insert_Slab_Confirm"]
         + df["Coil_Inv"]
     )
 
-    # =====================================
     # Outstanding
-    # =====================================
-
     if "Ord QTY+" in df.columns:
-
         df["Outstanding"] = (
             df["Ord QTY+"]
             - df["Sum"]
         )
-
     else:
-
         df["Outstanding"] = 0
 
-    # =====================================
     # Production Add
-    # Excel:
-    # IF((NC-CoilInv)<4,0,(NC-CoilInv))
-    # =====================================
-
     df["Production_Add"] = np.where(
         (df["NC"] - df["Coil_Inv"]) < 4,
         0,
         (df["NC"] - df["Coil_Inv"])
     )
 
-    # =====================================
     # Remaining Coil
-    # =====================================
-
     remaining = np.where(
         df["NC"] > 3.999,
         df["Coil_Inv"] - df["NC"],
         df["Coil_Inv"]
     )
 
-    remaining = np.maximum(
-        0,
-        remaining
-    )
+    remaining = np.maximum(0, remaining)
 
     df["Remaining_Coil"] = np.where(
         remaining < 4,
@@ -167,51 +118,56 @@ def calculate(df):
         remaining
     )
 
-    # =====================================
-    # Remaining Coil + Move
-    # =====================================
+    # Move Available
+    df["Move_Available"] = (
+        df.get("Sample+", 0)
+        + df.get("Test+", 0)
+        + df.get("P&O WP", 0)
+        + df.get("Rdy Shp+", 0)
+    )
 
-    move_value = np.where(
-
-        df["NC"] <= 3.999,
-
-        df["Remaining_Coil"],
-
+    # Move Coil Result
+    df["Move_Coil_Result"] = np.where(
+        df["Outstanding"] <= 0,
+        "",
         np.where(
-
-            df["NC"] <= df["Outstanding"],
-
-            df["Remaining_Coil"],
-
-            np.maximum(
-                0,
-                df["Remaining_Coil"]
-                - (
-                    df["NC"]
-                    - df["Outstanding"]
-                )
+            df["Move_Available"] >= df["Outstanding"],
+            "MOVE COIL",
+            np.where(
+                df["Move_Available"] > 0,
+                "MOVE COIL + PRODUCE",
+                "WAITING MOVE"
             )
         )
     )
 
-    df["Remaining_Coil_Move"] = np.where(
-        move_value < 4,
-        0,
-        move_value
+    df["Move_Coil"] = df["Move_Available"]
+
+    # Order Status
+    df["Order_Status"] = np.where(
+        df["Production_Add"] > 0,
+        "OPEN",
+        "CLOSED"
     )
 
-    # =====================================
-    # Order+
-    # =====================================
+    # Close Order
+    df["Close_Order"] = np.where(
+        (
+            df["Production_Add"] < 3.999
+        )
+        &
+        (
+            df["Sum"] == 0
+        ),
+        "ปิด",
+        "Failed"
+    )
 
-    df["Order_Plus"] = np.where(
-        df["Production_Add"] > 3.999,
+    # High Risk
+    df["High_Risk"] = np.where(
+        df["Production_Add"] > 0,
         "YES",
         "NO"
     )
 
-    # =====================================
-    # Close Order
-    # =====================================
-
-    df["Close_Order"] = 
+    return df
