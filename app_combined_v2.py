@@ -22,11 +22,54 @@ if uploaded_file:
 
     df = pd.read_excel(uploaded_file)
 
-    st.write(df.columns.tolist())
-
     result = calculate(df)
 
-    st.write(df.columns.tolist())
+# ===== FILTER SECTION =====
+
+st.sidebar.header("Filters")
+
+if "Buyer" in result.columns:
+
+    buyer = st.sidebar.selectbox(
+        "Buyer",
+        ["All"]
+        + sorted(
+            result["Buyer"]
+            .dropna()
+            .astype(str)
+            .unique()
+            .tolist()
+        )
+    )
+
+    if buyer != "All":
+
+        result = result[
+            result["Buyer"].astype(str)
+            == buyer
+        ]
+
+if "End Cust." in result.columns:
+
+    customer = st.sidebar.selectbox(
+        "Customer",
+        ["All"]
+        + sorted(
+            result["End Cust."]
+            .dropna()
+            .astype(str)
+            .unique()
+            .tolist()
+        )
+    )
+
+    if customer != "All":
+
+        result = result[
+            result["End Cust."]
+            .astype(str)
+            == customer
+        ]
 
     validation = validate_data(result)
 
