@@ -6,9 +6,9 @@ def calculate(df):
 
     df = df.copy()
 
-    # =============================
-    # Convert numeric columns
-    # =============================
+    # =====================================
+    # CONVERT NUMERIC COLUMNS
+    # =====================================
 
     numeric_columns = [
         "Need",
@@ -32,18 +32,21 @@ def calculate(df):
                 errors="coerce"
             ).fillna(0)
 
-    # =============================
-    # Outstanding
-    # =============================
+    # =====================================
+    # OUTSTANDING
+    # =====================================
 
     if "Need" in df.columns:
+
         df["Outstanding"] = df["Need"]
+
     else:
+
         df["Outstanding"] = 0
 
-    # =============================
-    # Coil Inventory
-    # =============================
+    # =====================================
+    # COIL INVENTORY
+    # =====================================
 
     inventory_columns = [
         "Other+",
@@ -55,16 +58,16 @@ def calculate(df):
         "Rdy Shp+"
     ]
 
-    existing_inventory = [
+    available_inventory = [
         col
         for col in inventory_columns
         if col in df.columns
     ]
 
-    if len(existing_inventory) > 0:
+    if available_inventory:
 
         df["Coil_Inv"] = (
-            df[existing_inventory]
+            df[available_inventory]
             .sum(axis=1)
         )
 
@@ -72,71 +75,59 @@ def calculate(df):
 
         df["Coil_Inv"] = 0
 
-    # =============================
-    # Production Add
-    # =============================
+    # =====================================
+    # PRODUCTION ADD
+    # =====================================
 
     df["Production_Add"] = np.maximum(
         0,
-        df["Outstanding"] - df["Coil_Inv"]
+        df["Outstanding"]
+        - df["Coil_Inv"]
     )
 
-    # =============================
-    # Remaining Coil
-    # =============================
+    # =====================================
+    # REMAINING COIL
+    # =====================================
 
     df["Remaining_Coil"] = np.maximum(
         0,
-        df["Coil_Inv"] - df["Outstanding"]
+        df["Coil_Inv"]
+        - df["Outstanding"]
     )
 
-    # =============================
-    # Move Coil
-    # =============================
+    # =====================================
+    # MOVE COIL
+    # =====================================
 
     if "Rdy Shp+" in df.columns:
+
         df["Move_Coil"] = df["Rdy Shp+"]
+
     else:
+
         df["Move_Coil"] = 0
 
-    # =============================
-    # Order Status
-    # =============================
-
-    df["Order_Status"] = np.where(
-        df["Production_Add"] > 0,
-        "OPEN",
-        "CLOSED"
-    )
-
-    # =============================
-    # Order Item Key
-    # =============================
+    # =====================================
+    # INVENTORY COVERAGE %
+    # =====================================
 
     if (
-        "OrderNo" in df.columns
-        and "Item" in df.columns
+        "Outstanding" in df.columns
+        and "Coil_Inv" in df.columns
     ):
 
-        df["Order_Item_Key"] = (
-            df["OrderNo"].astype(str)
-            + "_"
-            + df["Item"].astype(str)
+        df["Inventory_Coverage_Pct"] = np.where(
+            df["Outstanding"] > 0,
+            (
+                df["Coil_Inv"]
+                / df["Outstanding"]
+            ) * 100,
+            0
         )
 
-    # =============================
-    # Buyer Customer Key
-    # =============================
+    else:
 
-    if (
-        "Buyer" in df.columns
-        and "End Cust." in df.columns
-    ):
+        df["Inventory_Coverage_Pct"] = 0
 
-        df["Buyer_Customer"] = (
-            df["Buyer"].astype(str)
-            + "_"
-            + df["End Cust."].astype(str)
-        )
-
-    return df
+    # =====================================
+    #
