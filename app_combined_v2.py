@@ -73,6 +73,26 @@ if "End Cust." in result.columns:
 
     validation = validate_data(result)
 
+    st.sidebar.header("Search")
+
+search_order = st.sidebar.text_input(
+    "OrderNo"
+)
+
+if (
+    search_order
+    and "OrderNo" in result.columns
+):
+    result = result[
+        result["OrderNo"]
+        .astype(str)
+        .str.contains(
+            search_order,
+            case=False,
+            na=False
+        )
+    ]
+
     if validation["status"] == "PASS":
         st.success("Validation Passed")
     else:
