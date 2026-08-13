@@ -47,6 +47,8 @@ def calculate(df):
 
     # =====================================
     # SPEC KEY
+    # = Com.SG + Equi Grade + EndUse +
+    #   Thk + Cert. Cust.
     # =====================================
 
     required_cols = [
@@ -201,6 +203,7 @@ def calculate(df):
 
     # =====================================
     # MOVE AVAILABLE
+    # ใช้เฉพาะ Coil พร้อม Move
     # =====================================
 
     df["Move_Available"] = (
@@ -237,14 +240,14 @@ def calculate(df):
     )
 
     # =====================================
-    # MOVE COIL RESULT
+    # MOVE RECOMMENDATION
     # =====================================
 
     df["Move_Coil_Result"] = np.where(
 
         df["Outstanding"] <= 0,
 
-        "",
+        "CLOSED",
 
         np.where(
 
@@ -257,11 +260,32 @@ def calculate(df):
 
                 df["Move_Available"] > 0,
 
-                "MOVE COIL + PRODUCE",
+                "MOVE + PRODUCE",
 
-                "WAITING MOVE"
+                "PRODUCE ONLY"
             )
         )
+    )
+
+    # =====================================
+    # MOVE PRIORITY
+    # =====================================
+
+    df["Move_Priority"] = np.select(
+
+        [
+            df["Outstanding"] >= 50,
+            df["Outstanding"] >= 20,
+            df["Outstanding"] > 0
+        ],
+
+        [
+            "HIGH",
+            "MEDIUM",
+            "LOW"
+        ],
+
+        default=""
     )
 
     # =====================================
@@ -320,7 +344,8 @@ def calculate(df):
     if "Last Shipment Date" in df.columns:
 
         shipment_date = pd.to_datetime(
-            df["Last Shipment Date"],
+            df["Last Shipment Date"].astype(str),
+            format="%Y%m%d",
             errors="coerce"
         )
 
@@ -337,9 +362,31 @@ def calculate(df):
             shipment_date.dt.strftime("%Y-%m")
         )
 
+        aging_days = (
+            pd.Timestamp.today()
+            - shipment_date
+        ).dt.days
+
+        df["Aging_Group"] = np.select(
+            [
+                aging_days <= 30,
+                aging_days <= 60,
+                aging_days <= 90,
+                aging_days > 90
+            ],
+            [
+                "0-30 Days",
+                "31-60 Days",
+                "61-90 Days",
+                "90+ Days"
+            ],
+            default="Unknown"
+        )
+
     else:
 
         df["Old_Order"] = "NO"
         df["Shipment_Month"] = ""
+        df["Aging_Group"] = ""
 
     return df
