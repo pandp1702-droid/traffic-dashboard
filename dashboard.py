@@ -62,7 +62,7 @@ def show_dashboard(df):
     # SUMMARY KPI
     # ==========================
 
-    k1, k2, k3, k4 = st.columns(4)
+    k1, k2, k3, k4, k5 = st.columns(5)
 
     k1.metric(
         "Total Orders",
