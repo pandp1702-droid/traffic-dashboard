@@ -36,25 +36,10 @@ def show_dashboard(df):
         else 0
     )
 
-    c1.metric(
-        "Outstanding",
-        f"{outstanding:,.2f}"
-    )
-
-    c2.metric(
-        "Coil Inventory",
-        f"{coil_inv:,.2f}"
-    )
-
-    c3.metric(
-        "Production Add",
-        f"{production_add:,.2f}"
-    )
-
-    c4.metric(
-        "Move Coil",
-        f"{move_coil:,.2f}"
-    )
+    c1.metric("Outstanding", f"{outstanding:,.2f}")
+    c2.metric("Coil Inventory", f"{coil_inv:,.2f}")
+    c3.metric("Production Add", f"{production_add:,.2f}")
+    c4.metric("Move Coil", f"{move_coil:,.2f}")
 
     st.divider()
 
@@ -114,10 +99,7 @@ def show_dashboard(df):
     # OUTSTANDING BY BUYER
     # =====================================
 
-    if (
-        "Buyer" in df.columns
-        and "Outstanding" in df.columns
-    ):
+    if "Buyer" in df.columns and "Outstanding" in df.columns:
 
         buyer_df = (
             df.groupby("Buyer")["Outstanding"]
@@ -148,10 +130,7 @@ def show_dashboard(df):
     # OUTSTANDING BY CUSTOMER
     # =====================================
 
-    if (
-        "End Cust." in df.columns
-        and "Outstanding" in df.columns
-    ):
+    if "End Cust." in df.columns and "Outstanding" in df.columns:
 
         customer_df = (
             df.groupby("End Cust.")["Outstanding"]
@@ -182,10 +161,7 @@ def show_dashboard(df):
     # MOVE COIL BY BUYER
     # =====================================
 
-    if (
-        "Buyer" in df.columns
-        and "Move_Coil" in df.columns
-    ):
+    if "Buyer" in df.columns and "Move_Coil" in df.columns:
 
         move_df = (
             df.groupby("Buyer")["Move_Coil"]
@@ -216,10 +192,7 @@ def show_dashboard(df):
     # OUTSTANDING BY GRADE
     # =====================================
 
-    if (
-        "Com.SG" in df.columns
-        and "Outstanding" in df.columns
-    ):
+    if "Com.SG" in df.columns and "Outstanding" in df.columns:
 
         grade_df = (
             df.groupby("Com.SG")["Outstanding"]
@@ -240,81 +213,3 @@ def show_dashboard(df):
             y="Outstanding",
             color="Outstanding"
         )
-
-        st.plotly_chart(
-            fig4,
-            use_container_width=True
-        )
-
-    # =====================================
-    # OUTSTANDING BY THICKNESS
-    # =====================================
-
-    if (
-        "Thk" in df.columns
-        and "Outstanding" in df.columns
-    ):
-
-        thk_df = (
-            df.groupby("Thk")["Outstanding"]
-            .sum()
-            .reset_index()
-        )
-
-        st.subheader("Outstanding By Thickness")
-
-        fig5 = px.bar(
-            thk_df,
-            x="Thk",
-            y="Outstanding"
-        )
-
-        st.plotly_chart(
-            fig5,
-            use_container_width=True
-        )
-
-    # =====================================
-    # ORDER STATUS
-    # =====================================
-
-    if "Order_Status" in df.columns:
-
-        status_df = (
-            df["Order_Status"]
-            .value_counts()
-            .reset_index()
-        )
-
-        status_df.columns = [
-            "Status",
-            "Count"
-        ]
-
-        st.subheader("Order Status")
-
-        fig6 = px.pie(
-            status_df,
-            names="Status",
-            values="Count",
-            hole=0.4
-        )
-
-        st.plotly_chart(
-            fig6,
-            use_container_width=True
-        )
-
-    st.divider()
-
-    # =====================================
-    # DATA PREVIEW
-    # =====================================
-
-    st.subheader("Data Preview")
-
-    st.dataframe(
-        df,
-        use_container_width=True,
-        height=500
-    )
