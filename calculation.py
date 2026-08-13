@@ -38,20 +38,15 @@ def calculate(df):
     # =====================================
 
     if "NC COIL" in df.columns:
-
         df["NC"] = df["NC COIL"]
-
     else:
-
         df["NC"] = 0
 
     # =====================================
     # SPEC KEY
-    # = Com.SG + Equi Grade + EndUse +
-    #   Thk + Cert. Cust.
     # =====================================
 
-    required_cols = [
+    key_cols = [
         "Com.SG",
         "Equi  Grade",
         "EndUse",
@@ -59,7 +54,7 @@ def calculate(df):
         "Cert. Cust."
     ]
 
-    if all(col in df.columns for col in required_cols):
+    if all(col in df.columns for col in key_cols):
 
         df["SPEC_KEY"] = (
             df["Com.SG"].astype(str)
@@ -137,8 +132,6 @@ def calculate(df):
 
     # =====================================
     # PRODUCTION ADD
-    # Excel:
-    # IF((NC-CoilInv)<4,0,(NC-CoilInv))
     # =====================================
 
     df["Production_Add"] = np.where(
@@ -203,7 +196,7 @@ def calculate(df):
 
     # =====================================
     # MOVE AVAILABLE
-    # ใช้เฉพาะ Coil พร้อม Move
+    # ใช้เฉพาะ Coil ที่ Ready Move
     # =====================================
 
     df["Move_Available"] = (
@@ -272,21 +265,57 @@ def calculate(df):
     # =====================================
 
     df["Move_Priority"] = np.select(
-
         [
             df["Outstanding"] >= 50,
             df["Outstanding"] >= 20,
             df["Outstanding"] > 0
         ],
-
         [
             "HIGH",
             "MEDIUM",
             "LOW"
         ],
-
         default=""
     )
+
+    # =====================================
+    # MOVE MATCHING
+    # =====================================
+
+    df["Move_From_Order"] = ""
+    df["Move_Qty"] = 0
+
+    if "SPEC_KEY" in df.columns:
+
+        available_df = df[
+            df["Move_Available"] > 0
+        ].copy()
+
+        for idx in df.index:
+
+            if df.loc[idx, "Outstanding"] <= 0:
+                continue
+
+            spec = df.loc[idx, "SPEC_KEY"]
+
+            candidates = available_df[
+                available_df["SPEC_KEY"] == spec
+            ]
+
+            if len(candidates) > 0:
+
+                source = candidates.iloc[0]
+
+                if "OrderNo" in source.index:
+
+                    df.loc[idx, "Move_From_Order"] = (
+                        source["OrderNo"]
+                    )
+
+                df.loc[idx, "Move_Qty"] = min(
+                    df.loc[idx, "Outstanding"],
+                    source["Move_Available"]
+                )
 
     # =====================================
     # INVENTORY COVERAGE
@@ -349,11 +378,13 @@ def calculate(df):
             errors="coerce"
         )
 
+        aging_days = (
+            pd.Timestamp.today()
+            - shipment_date
+        ).dt.days
+
         df["Old_Order"] = np.where(
-            (
-                pd.Timestamp.today()
-                - shipment_date
-            ).dt.days > 90,
+            aging_days > 90,
             "YES",
             "NO"
         )
@@ -361,11 +392,6 @@ def calculate(df):
         df["Shipment_Month"] = (
             shipment_date.dt.strftime("%Y-%m")
         )
-
-        aging_days = (
-            pd.Timestamp.today()
-            - shipment_date
-        ).dt.days
 
         df["Aging_Group"] = np.select(
             [
