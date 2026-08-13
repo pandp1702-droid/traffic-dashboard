@@ -6,39 +6,73 @@ def calculate(df):
 
     df = df.copy()
 
-    # Create Key
-    required_cols = ["Protocol", "Com.SG", "EndUse", "Thk", "Wid"]
+    # Convert numeric columns
+    cols = [
+        "Remain Insert",
+        "Slab Confirm",
+        "Need",
+        "Other+",
+        "Sample+",
+        "Test+",
+        "P&O WP",
+        "OSP+",
+        "Suspend+",
+        "Rdy Shp+"
+    ]
 
-    if all(col in df.columns for col in required_cols):
-        df["KEY"] = (
-            df["Protocol"].astype(str)
-            + df["Com.SG"].astype(str)
-            + df["EndUse"].astype(str)
-            + df["Thk"].astype(str)
-            + df["Wid"].astype(str)
-        )
+    for col in cols:
+        if col in df.columns:
+            df[col] = pd.to_numeric(
+                df[col],
+                errors="coerce"
+            ).fillna(0)
 
-    # Temporary version
-    # Avoid AK / AL / AM errors until actual columns are mapped
-
-    numeric_cols = df.select_dtypes(include=["number"]).columns
-
-    if len(numeric_cols) > 0:
-
-        df["Outstanding"] = 0
-        df["Coil_Inv"] = 0
-        df["Production_Add"] = 0
-        df["Remain_Balance"] = 0
-        df["Remain_Move"] = 0
-
+    # Outstanding
+    if "Need" in df.columns:
+        df["Outstanding"] = df["Need"]
     else:
-
         df["Outstanding"] = 0
-        df["Coil_Inv"] = 0
-        df["Production_Add"] = 0
-        df["Remain_Balance"] = 0
-        df["Remain_Move"] = 0
 
-    df["Order_Status"] = "OPEN"
+    # Coil Inventory
+    inventory_cols = [
+        "Other+",
+        "Sample+",
+        "Test+",
+        "P&O WP",
+        "OSP+",
+        "Suspend+",
+        "Rdy Shp+"
+    ]
+
+    available = [
+        col
+        for col in inventory_cols
+        if col in df.columns
+    ]
+
+    if available:
+        df["Coil_Inv"] = df[available].sum(axis=1)
+    else:
+        df["Coil_Inv"] = 0
+
+    # Production Add
+    df["Production_Add"] = np.where(
+        (df["Outstanding"] - df["Coil_Inv"]) < 0,
+        0,
+        df["Outstanding"] - df["Coil_Inv"]
+    )
+
+    # Move Coil
+    if "Rdy Shp+" in df.columns:
+        df["Move_Coil"] = df["Rdy Shp+"]
+    else:
+        df["Move_Coil"] = 0
+
+    # Order Status
+    df["Order_Status"] = np.where(
+        df["Production_Add"] > 0,
+        "OPEN",
+        "CLOSED"
+    )
 
     return df
