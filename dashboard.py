@@ -337,4 +337,3 @@ def show_dashboard(df):
 
     if (
         "Protocol" in df.columns
-     
