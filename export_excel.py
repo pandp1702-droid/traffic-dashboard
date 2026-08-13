@@ -10,7 +10,7 @@ def export_to_excel(df):
     # EXECUTIVE SUMMARY
     # =====================================
 
-    executive_summary = pd.DataFrame({
+    summary = pd.DataFrame({
 
         "Metric": [
 
@@ -78,17 +78,14 @@ def export_to_excel(df):
     })
 
     # =====================================
-    # BUYER SUMMARY
+    # BUYER SCORECARD
     # =====================================
 
-    buyer_summary = pd.DataFrame()
+    buyer_scorecard = pd.DataFrame()
 
-    if (
-        "Buyer" in df.columns
-        and "Outstanding" in df.columns
-    ):
+    if "Buyer" in df.columns:
 
-        buyer_summary = (
+        buyer_scorecard = (
             df.groupby("Buyer")
             .agg({
                 "Outstanding": "sum",
@@ -105,197 +102,4 @@ def export_to_excel(df):
         )
 
     # =====================================
-    # CUSTOMER SUMMARY
-    # =====================================
-
-    customer_summary = pd.DataFrame()
-
-    if (
-        "End Cust." in df.columns
-        and "Outstanding" in df.columns
-    ):
-
-        customer_summary = (
-            df.groupby("End Cust.")
-            .agg({
-                "Outstanding": "sum",
-                "Production_Add": "sum",
-                "NC": "sum",
-                "Move_Available": "sum",
-                "Ready_To_Ship": "sum"
-            })
-            .reset_index()
-            .sort_values(
-                "Outstanding",
-                ascending=False
-            )
-        )
-
-    # =====================================
-    # GRADE SUMMARY
-    # =====================================
-
-    grade_summary = pd.DataFrame()
-
-    if (
-        "Com.SG" in df.columns
-        and "Outstanding" in df.columns
-    ):
-
-        grade_summary = (
-            df.groupby("Com.SG")
-            .agg({
-                "Outstanding": "sum",
-                "Production_Add": "sum"
-            })
-            .reset_index()
-            .sort_values(
-                "Outstanding",
-                ascending=False
-            )
-        )
-
-    # =====================================
-    # MOVE COIL STATUS
-    # =====================================
-
-    move_status = pd.DataFrame()
-
-    if "Move_Coil_Result" in df.columns:
-
-        move_status = (
-            df["Move_Coil_Result"]
-            .value_counts()
-            .reset_index()
-        )
-
-        move_status.columns = [
-            "Status",
-            "Count"
-        ]
-
-    # =====================================
-    # MOVE RECOMMENDATION
-    # =====================================
-
-    move_recommendation = pd.DataFrame()
-
-    if "Move_Coil_Result" in df.columns:
-
-        move_recommendation = (
-            df[
-                df["Move_Coil_Result"]
-                != "CLOSED"
-            ]
-        )
-
-    # =====================================
-    # HIGH RISK
-    # =====================================
-
-    high_risk_df = pd.DataFrame()
-
-    if "High_Risk" in df.columns:
-
-        high_risk_df = (
-            df[
-                df["High_Risk"]
-                == "YES"
-            ]
-        )
-
-    # =====================================
-    # OLD ORDERS
-    # =====================================
-
-    old_order_df = pd.DataFrame()
-
-    if "Old_Order" in df.columns:
-
-        old_order_df = (
-            df[
-                df["Old_Order"]
-                == "YES"
-            ]
-        )
-
-    # =====================================
-    # EXPORT
-    # =====================================
-
-    with pd.ExcelWriter(
-        output,
-        engine="openpyxl"
-    ) as writer:
-
-        executive_summary.to_excel(
-            writer,
-            sheet_name="Executive Summary",
-            index=False
-        )
-
-        df.to_excel(
-            writer,
-            sheet_name="Data",
-            index=False
-        )
-
-        if not buyer_summary.empty:
-
-            buyer_summary.to_excel(
-                writer,
-                sheet_name="Buyer Summary",
-                index=False
-            )
-
-        if not customer_summary.empty:
-
-            customer_summary.to_excel(
-                writer,
-                sheet_name="Customer Summary",
-                index=False
-            )
-
-        if not grade_summary.empty:
-
-            grade_summary.to_excel(
-                writer,
-                sheet_name="Grade Summary",
-                index=False
-            )
-
-        if not move_status.empty:
-
-            move_status.to_excel(
-                writer,
-                sheet_name="Move Coil Status",
-                index=False
-            )
-
-        if not move_recommendation.empty:
-
-            move_recommendation.to_excel(
-                writer,
-                sheet_name="Move Recommendation",
-                index=False
-            )
-
-        if not high_risk_df.empty:
-
-            high_risk_df.to_excel(
-                writer,
-                sheet_name="High Risk Orders",
-                index=False
-            )
-
-        if not old_order_df.empty:
-
-            old_order_df.to_excel(
-                writer,
-                sheet_name="Old Orders",
-                index=False
-            )
-
-    output.seek(0)
-
-    return output.getvalue()
+    # CUSTOMER
