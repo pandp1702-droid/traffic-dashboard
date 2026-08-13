@@ -17,7 +17,12 @@ st.set_page_config(
     layout="wide"
 )
 
-st.title("📊 SSI Traffic Management Dashboard")
+# =====================================
+# HEADER
+# =====================================
+
+st.title("🚛 SSI Traffic Management Dashboard")
+
 st.caption(
     "Upload SAP Export → Calculate → Dashboard → Export Report"
 )
@@ -35,10 +40,10 @@ uploaded_file = st.file_uploader(
 )
 
 # =====================================
-# LOAD DATA
+# PROCESS
 # =====================================
 
-if uploaded_file:
+if uploaded_file is not None:
 
     with st.spinner("Loading file..."):
 
@@ -47,7 +52,7 @@ if uploaded_file:
         result = calculate(df)
 
     # =====================================
-    # FILTER PANEL
+    # FILTERS
     # =====================================
 
     st.sidebar.header("🔍 Filters")
@@ -58,8 +63,8 @@ if uploaded_file:
 
         buyer = st.sidebar.selectbox(
             "Buyer",
-            ["All"]
-            + sorted(
+            ["All"] +
+            sorted(
                 result["Buyer"]
                 .dropna()
                 .astype(str)
@@ -72,8 +77,7 @@ if uploaded_file:
 
             result = result[
                 result["Buyer"]
-                .astype(str)
-                == buyer
+                .astype(str) == buyer
             ]
 
     # Customer
@@ -82,8 +86,8 @@ if uploaded_file:
 
         customer = st.sidebar.selectbox(
             "Customer",
-            ["All"]
-            + sorted(
+            ["All"] +
+            sorted(
                 result["End Cust."]
                 .dropna()
                 .astype(str)
@@ -96,8 +100,7 @@ if uploaded_file:
 
             result = result[
                 result["End Cust."]
-                .astype(str)
-                == customer
+                .astype(str) == customer
             ]
 
     # Grade
@@ -106,8 +109,8 @@ if uploaded_file:
 
         grade = st.sidebar.selectbox(
             "Grade",
-            ["All"]
-            + sorted(
+            ["All"] +
+            sorted(
                 result["Com.SG"]
                 .dropna()
                 .astype(str)
@@ -120,18 +123,17 @@ if uploaded_file:
 
             result = result[
                 result["Com.SG"]
-                .astype(str)
-                == grade
+                .astype(str) == grade
             ]
 
     # Thickness
 
     if "Thk" in result.columns:
 
-        thk = st.sidebar.selectbox(
+        thickness = st.sidebar.selectbox(
             "Thickness",
-            ["All"]
-            + sorted(
+            ["All"] +
+            sorted(
                 result["Thk"]
                 .dropna()
                 .astype(str)
@@ -140,22 +142,21 @@ if uploaded_file:
             )
         )
 
-        if thk != "All":
+        if thickness != "All":
 
             result = result[
                 result["Thk"]
-                .astype(str)
-                == thk
+                .astype(str) == thickness
             ]
 
     # Shipment Month
 
     if "Shipment_Month" in result.columns:
 
-        month = st.sidebar.selectbox(
+        shipment_month = st.sidebar.selectbox(
             "Shipment Month",
-            ["All"]
-            + sorted(
+            ["All"] +
+            sorted(
                 result["Shipment_Month"]
                 .dropna()
                 .astype(str)
@@ -164,28 +165,28 @@ if uploaded_file:
             )
         )
 
-        if month != "All":
+        if shipment_month != "All":
 
             result = result[
                 result["Shipment_Month"]
                 .astype(str)
-                == month
+                == shipment_month
             ]
 
     st.sidebar.markdown("---")
 
     # =====================================
-    # SEARCH PANEL
+    # SEARCH
     # =====================================
 
     st.sidebar.header("🔎 Search")
 
-    search_order = st.sidebar.text_input(
-        "Order No."
+    order_search = st.sidebar.text_input(
+        "Order No"
     )
 
     if (
-        search_order
+        order_search
         and "OrderNo" in result.columns
     ):
 
@@ -193,18 +194,18 @@ if uploaded_file:
             result["OrderNo"]
             .astype(str)
             .str.contains(
-                search_order,
+                order_search,
                 case=False,
                 na=False
             )
         ]
 
-    search_product = st.sidebar.text_input(
+    product_search = st.sidebar.text_input(
         "Product Code"
     )
 
     if (
-        search_product
+        product_search
         and "Prod Cd" in result.columns
     ):
 
@@ -212,18 +213,18 @@ if uploaded_file:
             result["Prod Cd"]
             .astype(str)
             .str.contains(
-                search_product,
+                product_search,
                 case=False,
                 na=False
             )
         ]
 
-    search_customer = st.sidebar.text_input(
+    customer_search = st.sidebar.text_input(
         "Customer Search"
     )
 
     if (
-        search_customer
+        customer_search
         and "End Cust." in result.columns
     ):
 
@@ -231,13 +232,11 @@ if uploaded_file:
             result["End Cust."]
             .astype(str)
             .str.contains(
-                search_customer,
+                customer_search,
                 case=False,
                 na=False
             )
         ]
-
-    st.sidebar.markdown("---")
 
     # =====================================
     # VALIDATION
@@ -256,6 +255,7 @@ if uploaded_file:
         )
 
         for issue in validation["issues"]:
+
             st.write(issue)
 
     # =====================================
@@ -276,7 +276,7 @@ if uploaded_file:
         st.dataframe(
             result,
             use_container_width=True,
-            height=500
+            height=600
         )
 
     # =====================================
@@ -284,6 +284,7 @@ if uploaded_file:
     # =====================================
 
     st.markdown("---")
+
     st.subheader("📥 Export Report")
 
     excel_file = export_to_excel(result)
@@ -301,13 +302,13 @@ if uploaded_file:
 
     with col2:
 
-        csv = result.to_csv(
+        csv_file = result.to_csv(
             index=False
         ).encode("utf-8")
 
         st.download_button(
             label="📄 Export CSV",
-            data=csv,
+            data=csv_file,
             file_name="Balance_Coil_Result.csv",
             mime="text/csv"
         )
