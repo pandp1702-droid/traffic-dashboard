@@ -6,94 +6,123 @@ def show_dashboard(df):
 
     st.title("SSI Traffic Dashboard")
 
-    # ==========================
-    # KPI
-    # ==========================
+    # =====================================
+    # SSI KPI
+    # =====================================
+
+    st.subheader("SSI Traffic KPI")
 
     k1, k2, k3, k4 = st.columns(4)
 
     k1.metric(
+        "Orders",
+        len(df)
+    )
+
+    k2.metric(
+        "Not Produced",
+        round(
+            df["Not_Produced"].sum(),
+            2
+        ) if "Not_Produced" in df.columns else 0
+    )
+
+    k3.metric(
+        "In Production",
+        round(
+            df["In_Production"].sum(),
+            2
+        ) if "In_Production" in df.columns else 0
+    )
+
+    k4.metric(
+        "Problem Coil",
+        round(
+            df["Problem_Coil"].sum(),
+            2
+        ) if "Problem_Coil" in df.columns else 0
+    )
+
+    k5, k6, k7, k8 = st.columns(4)
+
+    k5.metric(
+        "Ready To Ship",
+        round(
+            df["Ready_To_Ship"].sum(),
+            2
+        ) if "Ready_To_Ship" in df.columns else 0
+    )
+
+    k6.metric(
+        "Total Coil",
+        round(
+            df["Total_Coil"].sum(),
+            2
+        ) if "Total_Coil" in df.columns else 0
+    )
+
+    k7.metric(
         "Outstanding",
         round(
             df["Outstanding"].sum(),
             2
-        )
-        if "Outstanding" in df.columns
-        else 0
+        ) if "Outstanding" in df.columns else 0
     )
 
-    k2.metric(
-        "Coil Inventory",
-        round(
-            df["Coil_Inv"].sum(),
-            2
-        )
-        if "Coil_Inv" in df.columns
-        else 0
-    )
-
-    k3.metric(
-        "Production Add",
-        round(
-            df["Production_Add"].sum(),
-            2
-        )
-        if "Production_Add" in df.columns
-        else 0
-    )
-
-    k4.metric(
-        "Move Available",
-        round(
-            df["Move_Available"].sum(),
-            2
-        )
-        if "Move_Available" in df.columns
+    k8.metric(
+        "Old Orders",
+        (
+            df["Old_Order"] == "YES"
+        ).sum()
+        if "Old_Order" in df.columns
         else 0
     )
 
     st.divider()
 
-    # ==========================
-    # SUMMARY KPI
-    # ==========================
+    # =====================================
+    # EXECUTIVE KPI
+    # =====================================
 
-    s1, s2, s3, s4 = st.columns(4)
+    e1, e2, e3, e4 = st.columns(4)
 
-    s1.metric(
-        "Total Orders",
-        len(df)
-    )
-
-    s2.metric(
-        "Total Buyers",
-        df["Buyer"].nunique()
-        if "Buyer" in df.columns
-        else 0
-    )
-
-    s3.metric(
-        "Total Customers",
-        df["End Cust."].nunique()
-        if "End Cust." in df.columns
-        else 0
-    )
-
-    s4.metric(
+    e1.metric(
         "NC Coil",
         round(
             df["NC"].sum(),
             2
-        )
-        if "NC" in df.columns
-        else 0
+        ) if "NC" in df.columns else 0
+    )
+
+    e2.metric(
+        "Production Add",
+        round(
+            df["Production_Add"].sum(),
+            2
+        ) if "Production_Add" in df.columns else 0
+    )
+
+    e3.metric(
+        "Remaining Coil",
+        round(
+            df["Remaining_Coil"].sum(),
+            2
+        ) if "Remaining_Coil" in df.columns else 0
+    )
+
+    e4.metric(
+        "Move Available",
+        round(
+            df["Move_Available"].sum(),
+            2
+        ) if "Move_Available" in df.columns else 0
     )
 
     st.divider()
 
-    # ==========================
+    # =====================================
     # MOVE COIL STATUS
-    # ==========================
+    # =====================================
 
     if "Move_Coil_Result" in df.columns:
 
@@ -124,32 +153,40 @@ def show_dashboard(df):
             use_container_width=True
         )
 
-    # ==========================
-    # TOP BUYER
-    # ==========================
+    # =====================================
+    # BUYER SUMMARY
+    # =====================================
 
     if (
         "Buyer" in df.columns
         and "Outstanding" in df.columns
     ):
 
+        st.subheader(
+            "Buyer Summary"
+        )
+
         buyer_df = (
-            df.groupby("Buyer")["Outstanding"]
-            .sum()
+            df.groupby("Buyer")
+            .agg({
+                "Outstanding": "sum",
+                "Production_Add": "sum",
+                "NC": "sum"
+            })
             .reset_index()
             .sort_values(
                 "Outstanding",
                 ascending=False
             )
-            .head(10)
         )
 
-        st.subheader(
-            "Top 10 Outstanding By Buyer"
+        st.dataframe(
+            buyer_df,
+            use_container_width=True
         )
 
         fig_buyer = px.bar(
-            buyer_df,
+            buyer_df.head(10),
             x="Buyer",
             y="Outstanding",
             color="Outstanding"
@@ -160,9 +197,9 @@ def show_dashboard(df):
             use_container_width=True
         )
 
-    # ==========================
-    # TOP CUSTOMER
-    # ==========================
+    # =====================================
+    # CUSTOMER SUMMARY
+    # =====================================
 
     if (
         "End Cust." in df.columns
@@ -170,22 +207,25 @@ def show_dashboard(df):
     ):
 
         customer_df = (
-            df.groupby("End Cust.")["Outstanding"]
-            .sum()
+            df.groupby("End Cust.")
+            .agg({
+                "Outstanding": "sum",
+                "Production_Add": "sum",
+                "NC": "sum"
+            })
             .reset_index()
             .sort_values(
                 "Outstanding",
                 ascending=False
             )
-            .head(10)
         )
 
         st.subheader(
-            "Top 10 Outstanding By Customer"
+            "Customer Summary"
         )
 
         fig_customer = px.bar(
-            customer_df,
+            customer_df.head(10),
             x="End Cust.",
             y="Outstanding",
             color="Outstanding"
@@ -196,9 +236,9 @@ def show_dashboard(df):
             use_container_width=True
         )
 
-    # ==========================
+    # =====================================
     # GRADE ANALYSIS
-    # ==========================
+    # =====================================
 
     if (
         "Com.SG" in df.columns
@@ -206,14 +246,14 @@ def show_dashboard(df):
     ):
 
         grade_df = (
-            df.groupby("Com.SG")["Outstanding"]
+            df.groupby("Com.SG")
+            ["Outstanding"]
             .sum()
             .reset_index()
             .sort_values(
                 "Outstanding",
                 ascending=False
             )
-            .head(15)
         )
 
         st.subheader(
@@ -221,7 +261,7 @@ def show_dashboard(df):
         )
 
         fig_grade = px.bar(
-            grade_df,
+            grade_df.head(15),
             x="Com.SG",
             y="Outstanding",
             color="Outstanding"
@@ -232,9 +272,9 @@ def show_dashboard(df):
             use_container_width=True
         )
 
-    # ==========================
+    # =====================================
     # HIGH RISK ORDERS
-    # ==========================
+    # =====================================
 
     if "High_Risk" in df.columns:
 
@@ -251,9 +291,9 @@ def show_dashboard(df):
             use_container_width=True
         )
 
-    # ==========================
-    # ORDER STATUS
-    # ==========================
+    # =====================================
+    # CLOSE ORDER STATUS
+    # =====================================
 
     if "Close_Order" in df.columns:
 
@@ -285,9 +325,9 @@ def show_dashboard(df):
 
     st.divider()
 
-    # ==========================
+    # =====================================
     # DATA PREVIEW
-    # ==========================
+    # =====================================
 
     st.subheader(
         "Data Preview"
