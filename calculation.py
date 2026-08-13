@@ -38,16 +38,18 @@ def calculate(df):
     # =====================================
 
     if "NC COIL" in df.columns:
+
         df["NC"] = df["NC COIL"]
+
     else:
+
         df["NC"] = 0
 
     # =====================================
     # SPEC KEY
-    # = I + J + K + L + N
     # =====================================
 
-    key_cols = [
+    required_cols = [
         "Com.SG",
         "Equi  Grade",
         "EndUse",
@@ -55,7 +57,7 @@ def calculate(df):
         "Cert. Cust."
     ]
 
-    if all(col in df.columns for col in key_cols):
+    if all(col in df.columns for col in required_cols):
 
         df["SPEC_KEY"] = (
             df["Com.SG"].astype(str)
@@ -70,7 +72,7 @@ def calculate(df):
         df["SPEC_KEY"] = ""
 
     # =====================================
-    # Other + Suspend
+    # OTHER + SUSPEND
     # =====================================
 
     df["Other_Suspend"] = (
@@ -79,7 +81,7 @@ def calculate(df):
     )
 
     # =====================================
-    # Remain Insert + Slab Confirm
+    # REMAIN INSERT + SLAB CONFIRM
     # =====================================
 
     df["Remain_Insert_Slab_Confirm"] = (
@@ -88,7 +90,7 @@ def calculate(df):
     )
 
     # =====================================
-    # Sample + Test + P&O WP + Ready Ship
+    # SAMPLE + TEST + PO WP + RDY SHP
     # =====================================
 
     df["Sample_Test_WP_Rdy"] = (
@@ -99,7 +101,7 @@ def calculate(df):
     )
 
     # =====================================
-    # Coil Inv
+    # COIL INVENTORY
     # =====================================
 
     df["Coil_Inv"] = (
@@ -108,7 +110,7 @@ def calculate(df):
     )
 
     # =====================================
-    # Sum
+    # SUM
     # =====================================
 
     df["Sum"] = (
@@ -117,8 +119,7 @@ def calculate(df):
     )
 
     # =====================================
-    # Outstanding
-    # Ord QTY - Sum
+    # OUTSTANDING
     # =====================================
 
     if "Ord QTY+" in df.columns:
@@ -133,8 +134,9 @@ def calculate(df):
         df["Outstanding"] = 0
 
     # =====================================
-    # Production Add
-    # =IF((NC-CoilInv)<4,0,(NC-CoilInv))
+    # PRODUCTION ADD
+    # Excel:
+    # IF((NC-CoilInv)<4,0,(NC-CoilInv))
     # =====================================
 
     df["Production_Add"] = np.where(
@@ -144,17 +146,13 @@ def calculate(df):
     )
 
     # =====================================
-    # Remaining Coil
+    # REMAINING COIL
     # =====================================
 
     remaining = np.where(
-
         df["NC"] > 3.999,
-
         df["Coil_Inv"] - df["NC"],
-
         df["Coil_Inv"]
-
     )
 
     remaining = np.maximum(
@@ -169,7 +167,7 @@ def calculate(df):
     )
 
     # =====================================
-    # Remaining Coil + Move
+    # REMAINING COIL + MOVE
     # =====================================
 
     move_value = np.where(
@@ -202,7 +200,18 @@ def calculate(df):
     )
 
     # =====================================
-    # Order+
+    # MOVE AVAILABLE
+    # =====================================
+
+    df["Move_Available"] = (
+        df.get("Sample+", 0)
+        + df.get("Test+", 0)
+        + df.get("P&O WP", 0)
+        + df.get("Rdy Shp+", 0)
+    )
+
+    # =====================================
+    # ORDER+
     # =====================================
 
     df["Order_Plus"] = np.where(
@@ -212,7 +221,7 @@ def calculate(df):
     )
 
     # =====================================
-    # Close Order
+    # CLOSE ORDER
     # =====================================
 
     df["Close_Order"] = np.where(
@@ -228,19 +237,7 @@ def calculate(df):
     )
 
     # =====================================
-    # Move Available
-    # ใช้เฉพาะ Coil พร้อม Move
-    # =====================================
-
-    df["Move_Available"] = (
-        df.get("Sample+", 0)
-        + df.get("Test+", 0)
-        + df.get("P&O WP", 0)
-        + df.get("Rdy Shp+", 0)
-    )
-
-    # =====================================
-    # Move Coil Result
+    # MOVE COIL RESULT
     # =====================================
 
     df["Move_Coil_Result"] = np.where(
@@ -268,7 +265,7 @@ def calculate(df):
     )
 
     # =====================================
-    # Inventory Coverage %
+    # INVENTORY COVERAGE
     # =====================================
 
     df["Inventory_Coverage_Pct"] = np.where(
@@ -281,7 +278,7 @@ def calculate(df):
     )
 
     # =====================================
-    # High Risk
+    # HIGH RISK
     # =====================================
 
     df["High_Risk"] = np.where(
@@ -317,7 +314,7 @@ def calculate(df):
     )
 
     # =====================================
-    # Old Order
+    # OLD ORDER
     # =====================================
 
     if "Last Shipment Date" in df.columns:
@@ -336,8 +333,13 @@ def calculate(df):
             "NO"
         )
 
+        df["Shipment_Month"] = (
+            shipment_date.dt.strftime("%Y-%m")
+        )
+
     else:
 
         df["Old_Order"] = "NO"
+        df["Shipment_Month"] = ""
 
     return df
