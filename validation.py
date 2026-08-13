@@ -16,7 +16,7 @@ def validate_data(df):
             )
 
     # Check duplicate order number
-    if "OrderNo" in df.columns:
+    if "OrderNo + Item" in df.columns:
 
         duplicate_rows = df[df["OrderNo"].duplicated()]
 
