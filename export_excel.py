@@ -10,32 +10,47 @@ def export_to_excel(df):
     # EXECUTIVE SUMMARY
     # =====================================
 
-    summary = pd.DataFrame({
-
+    summary_data = {
         "Metric": [
-
+            "Orders",
             "Outstanding",
-            "Coil Inventory",
+            "Not Produced",
+            "In Production",
+            "Ready To Ship",
+            "Total Coil",
+            "NC Coil",
             "Production Add",
             "Remaining Coil",
             "Move Available",
-            "NC",
-            "Open Orders",
-            "Closed Orders",
-            "Total Orders",
+            "Old Orders",
             "Total Buyers",
             "Total Customers"
-
         ],
-
         "Value": [
+            len(df),
 
             df["Outstanding"].sum()
             if "Outstanding" in df.columns
             else 0,
 
-            df["Coil_Inv"].sum()
-            if "Coil_Inv" in df.columns
+            df["Not_Produced"].sum()
+            if "Not_Produced" in df.columns
+            else 0,
+
+            df["In_Production"].sum()
+            if "In_Production" in df.columns
+            else 0,
+
+            df["Ready_To_Ship"].sum()
+            if "Ready_To_Ship" in df.columns
+            else 0,
+
+            df["Total_Coil"].sum()
+            if "Total_Coil" in df.columns
+            else 0,
+
+            df["NC"].sum()
+            if "NC" in df.columns
             else 0,
 
             df["Production_Add"].sum()
@@ -50,23 +65,11 @@ def export_to_excel(df):
             if "Move_Available" in df.columns
             else 0,
 
-            df["NC"].sum()
-            if "NC" in df.columns
-            else 0,
-
             (
-                df["Close_Order"] == "Failed"
+                df["Old_Order"] == "YES"
             ).sum()
-            if "Close_Order" in df.columns
+            if "Old_Order" in df.columns
             else 0,
-
-            (
-                df["Close_Order"] == "ปิด"
-            ).sum()
-            if "Close_Order" in df.columns
-            else 0,
-
-            len(df),
 
             df["Buyer"].nunique()
             if "Buyer" in df.columns
@@ -75,10 +78,10 @@ def export_to_excel(df):
             df["End Cust."].nunique()
             if "End Cust." in df.columns
             else 0
-
         ]
+    }
 
-    })
+    executive_summary = pd.DataFrame(summary_data)
 
     # =====================================
     # BUYER SUMMARY
@@ -93,15 +96,14 @@ def export_to_excel(df):
 
         buyer_summary = (
             df.groupby("Buyer")
-            .agg({
-
-                "Outstanding": "sum",
-
-                "Production_Add": "sum",
-
-                "NC": "sum"
-
-            })
+            .agg(
+                {
+                    "Outstanding": "sum",
+                    "Production_Add": "sum",
+                    "NC": "sum",
+                    "Ready_To_Ship": "sum"
+                }
+            )
             .reset_index()
             .sort_values(
                 "Outstanding",
@@ -122,15 +124,14 @@ def export_to_excel(df):
 
         customer_summary = (
             df.groupby("End Cust.")
-            .agg({
-
-                "Outstanding": "sum",
-
-                "Production_Add": "sum",
-
-                "NC": "sum"
-
-            })
+            .agg(
+                {
+                    "Outstanding": "sum",
+                    "Production_Add": "sum",
+                    "NC": "sum",
+                    "Ready_To_Ship": "sum"
+                }
+            )
             .reset_index()
             .sort_values(
                 "Outstanding",
@@ -139,89 +140,11 @@ def export_to_excel(df):
         )
 
     # =====================================
-    # MOVE STATUS
+    # GRADE SUMMARY
     # =====================================
 
-    move_status = pd.DataFrame()
+    grade_summary = pd.DataFrame()
 
-    if "Move_Coil_Result" in df.columns:
-
-        move_status = (
-            df["Move_Coil_Result"]
-            .value_counts()
-            .reset_index()
-        )
-
-        move_status.columns = [
-            "Move Status",
-            "Count"
-        ]
-
-    # =====================================
-    # HIGH RISK
-    # =====================================
-
-    risk_df = pd.DataFrame()
-
-    if "High_Risk" in df.columns:
-
-        risk_df = df[
-            df["High_Risk"] == "YES"
-        ]
-
-    # =====================================
-    # EXPORT
-    # =====================================
-
-    with pd.ExcelWriter(
-        output,
-        engine="openpyxl"
-    ) as writer:
-
-        summary.to_excel(
-            writer,
-            sheet_name="Executive Summary",
-            index=False
-        )
-
-        df.to_excel(
-            writer,
-            sheet_name="Data",
-            index=False
-        )
-
-        if not buyer_summary.empty:
-
-            buyer_summary.to_excel(
-                writer,
-                sheet_name="Buyer Summary",
-                index=False
-            )
-
-        if not customer_summary.empty:
-
-            customer_summary.to_excel(
-                writer,
-                sheet_name="Customer Summary",
-                index=False
-            )
-
-        if not move_status.empty:
-
-            move_status.to_excel(
-                writer,
-                sheet_name="Move Status",
-                index=False
-            )
-
-        if not risk_df.empty:
-
-            risk_df.to_excel(
-                writer,
-                sheet_name="High Risk Orders",
-                index=False
-            )
-
-    output.seek(0)
-
-    return output
+    if (
+        "Com.SG" in df.columns
+        and "Outstanding" in df.
