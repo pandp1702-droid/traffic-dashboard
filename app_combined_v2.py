@@ -7,11 +7,11 @@ from dashboard import show_dashboard
 from export_excel import export_to_excel
 
 st.set_page_config(
-    page_title="Traffic Dashboard",
+    page_title="SSI Traffic Dashboard",
     layout="wide"
 )
 
-st.title("Traffic Dashboard")
+st.title("SSI Traffic Dashboard")
 
 uploaded_file = st.file_uploader(
     "Upload Excel File",
@@ -33,12 +33,11 @@ if uploaded_file:
     result = calculate(df)
 
     # ==========================
-    # FILTER
+    # FILTERS
     # ==========================
 
     st.sidebar.header("Filters")
 
-    # Buyer Filter
     if "Buyer" in result.columns:
 
         buyer = st.sidebar.selectbox(
@@ -61,7 +60,6 @@ if uploaded_file:
                 == buyer
             ]
 
-    # Customer Filter
     if "End Cust." in result.columns:
 
         customer = st.sidebar.selectbox(
@@ -84,7 +82,6 @@ if uploaded_file:
                 == customer
             ]
 
-    # Grade Filter
     if "Com.SG" in result.columns:
 
         grade = st.sidebar.selectbox(
@@ -107,7 +104,6 @@ if uploaded_file:
                 == grade
             ]
 
-    # Thickness Filter
     if "Thk" in result.columns:
 
         thk = st.sidebar.selectbox(
@@ -174,25 +170,6 @@ if uploaded_file:
             )
         ]
 
-    search_customer = st.sidebar.text_input(
-        "Customer Search"
-    )
-
-    if (
-        search_customer
-        and "End Cust." in result.columns
-    ):
-
-        result = result[
-            result["End Cust."]
-            .astype(str)
-            .str.contains(
-                search_customer,
-                case=False,
-                na=False
-            )
-        ]
-
     # ==========================
     # VALIDATION
     # ==========================
@@ -225,7 +202,9 @@ if uploaded_file:
     # DETAIL DATA
     # ==========================
 
-    st.subheader("Detail Data")
+    st.subheader(
+        "Detail Data"
+    )
 
     st.dataframe(
         result,
@@ -234,7 +213,7 @@ if uploaded_file:
     )
 
     # ==========================
-    # EXPORT
+    # EXPORT EXCEL
     # ==========================
 
     excel_file = export_to_excel(result)
