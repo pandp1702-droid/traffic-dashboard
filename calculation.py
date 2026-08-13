@@ -37,16 +37,17 @@ def calculate(df):
     # NC
     # =====================================
 
-    if "NC COIL" in df.columns:
-        df["NC"] = df["NC COIL"]
-    else:
-        df["NC"] = 0
+    df["NC"] = (
+        df["NC COIL"]
+        if "NC COIL" in df.columns
+        else 0
+    )
 
     # =====================================
     # SPEC KEY
     # =====================================
 
-    key_cols = [
+    required_cols = [
         "Com.SG",
         "Equi  Grade",
         "EndUse",
@@ -54,7 +55,7 @@ def calculate(df):
         "Cert. Cust."
     ]
 
-    if all(col in df.columns for col in key_cols):
+    if all(col in df.columns for col in required_cols):
 
         df["SPEC_KEY"] = (
             df["Com.SG"].astype(str)
@@ -69,7 +70,7 @@ def calculate(df):
         df["SPEC_KEY"] = ""
 
     # =====================================
-    # OTHER + SUSPEND
+    # GROUP CALCULATION
     # =====================================
 
     df["Other_Suspend"] = (
@@ -77,18 +78,10 @@ def calculate(df):
         + df.get("Suspend+", 0)
     )
 
-    # =====================================
-    # REMAIN INSERT + SLAB CONFIRM
-    # =====================================
-
     df["Remain_Insert_Slab_Confirm"] = (
         df.get("Remain Insert", 0)
         + df.get("Slab Confirm", 0)
     )
-
-    # =====================================
-    # SAMPLE + TEST + PO WP + RDY SHP
-    # =====================================
 
     df["Sample_Test_WP_Rdy"] = (
         df.get("Sample+", 0)
@@ -151,8 +144,8 @@ def calculate(df):
     )
 
     remaining = np.maximum(
-        0,
-        remaining
+        remaining,
+        0
     )
 
     df["Remaining_Coil"] = np.where(
@@ -162,41 +155,7 @@ def calculate(df):
     )
 
     # =====================================
-    # REMAINING COIL + MOVE
-    # =====================================
-
-    move_value = np.where(
-
-        df["NC"] <= 3.999,
-
-        df["Remaining_Coil"],
-
-        np.where(
-
-            df["NC"] <= df["Outstanding"],
-
-            df["Remaining_Coil"],
-
-            np.maximum(
-                0,
-                df["Remaining_Coil"]
-                - (
-                    df["NC"]
-                    - df["Outstanding"]
-                )
-            )
-        )
-    )
-
-    df["Remaining_Coil_Move"] = np.where(
-        move_value < 4,
-        0,
-        move_value
-    )
-
-    # =====================================
     # MOVE AVAILABLE
-    # ใช้เฉพาะ Coil ที่ Ready Move
     # =====================================
 
     df["Move_Available"] = (
@@ -207,54 +166,18 @@ def calculate(df):
     )
 
     # =====================================
-    # ORDER+
-    # =====================================
-
-    df["Order_Plus"] = np.where(
-        df["Production_Add"] > 3.999,
-        "YES",
-        "NO"
-    )
-
-    # =====================================
-    # CLOSE ORDER
-    # =====================================
-
-    df["Close_Order"] = np.where(
-        (
-            df["Production_Add"] < 3.999
-        )
-        &
-        (
-            df["Sum"] == 0
-        ),
-        "ปิด",
-        "Failed"
-    )
-
-    # =====================================
-    # MOVE RECOMMENDATION
+    # MOVE COIL RESULT
     # =====================================
 
     df["Move_Coil_Result"] = np.where(
-
         df["Outstanding"] <= 0,
-
         "CLOSED",
-
         np.where(
-
-            df["Move_Available"]
-            >= df["Outstanding"],
-
+            df["Move_Available"] >= df["Outstanding"],
             "MOVE COIL",
-
             np.where(
-
                 df["Move_Available"] > 0,
-
                 "MOVE + PRODUCE",
-
                 "PRODUCE ONLY"
             )
         )
@@ -279,43 +202,32 @@ def calculate(df):
     )
 
     # =====================================
-    # MOVE MATCHING
+    # TEMP MOVE MATCH
     # =====================================
 
     df["Move_From_Order"] = ""
-    df["Move_Qty"] = 0
+    df["Move_Qty"] = 0.0
 
-    if "SPEC_KEY" in df.columns:
+    # =====================================
+    # ORDER STATUS
+    # =====================================
 
-        available_df = df[
-            df["Move_Available"] > 0
-        ].copy()
+    df["Order_Plus"] = np.where(
+        df["Production_Add"] > 3.999,
+        "YES",
+        "NO"
+    )
 
-        for idx in df.index:
-
-            if df.loc[idx, "Outstanding"] <= 0:
-                continue
-
-            spec = df.loc[idx, "SPEC_KEY"]
-
-            candidates = available_df[
-                available_df["SPEC_KEY"] == spec
-            ]
-
-            if len(candidates) > 0:
-
-                source = candidates.iloc[0]
-
-                if "OrderNo" in source.index:
-
-                    df.loc[idx, "Move_From_Order"] = (
-                        source["OrderNo"]
-                    )
-
-                df.loc[idx, "Move_Qty"] = min(
-                    df.loc[idx, "Outstanding"],
-                    source["Move_Available"]
-                )
+    df["Close_Order"] = np.where(
+        (
+            df["Production_Add"] < 3.999
+        )
+        & (
+            df["Sum"] == 0
+        ),
+        "ปิด",
+        "Failed"
+    )
 
     # =====================================
     # INVENTORY COVERAGE
@@ -325,7 +237,8 @@ def calculate(df):
         df["Outstanding"] > 0,
         (
             df["Coil_Inv"]
-            / df["Outstanding"]
+            /
+            df["Outstanding"]
         ) * 100,
         0
     )
@@ -367,7 +280,7 @@ def calculate(df):
     )
 
     # =====================================
-    # OLD ORDER
+    # DATE / AGING
     # =====================================
 
     if "Last Shipment Date" in df.columns:
