@@ -41,6 +41,39 @@ def show_dashboard(df):
 
     st.divider()
 
+k1, k2, k3, k4 = st.columns(4)
+
+k1.metric(
+    "Total Orders",
+    len(df)
+)
+
+k2.metric(
+    "Total Buyers",
+    df["Buyer"].nunique()
+    if "Buyer" in df.columns
+    else 0
+)
+
+k3.metric(
+    "Total Customers",
+    df["End Cust."].nunique()
+    if "End Cust." in df.columns
+    else 0
+)
+
+k4.metric(
+    "Open Orders",
+    (
+        df["Order_Status"]
+        == "OPEN"
+    ).sum()
+    if "Order_Status" in df.columns
+    else 0
+)
+
+    st.divider()
+
     # Buyer Chart
     if (
         "Buyer" in df.columns
