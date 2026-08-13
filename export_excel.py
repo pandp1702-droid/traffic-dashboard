@@ -6,12 +6,17 @@ def export_to_excel(df):
 
     output = io.BytesIO()
 
+    # ==========================
+    # SUMMARY SHEET
+    # ==========================
+
     summary = pd.DataFrame(
         {
             "Metric": [
                 "Outstanding",
                 "Coil Inventory",
                 "Production Add",
+                "Remaining Coil",
                 "Move Coil",
                 "Total Orders",
                 "Total Buyers",
@@ -31,6 +36,10 @@ def export_to_excel(df):
 
                 df["Production_Add"].sum()
                 if "Production_Add" in df.columns
+                else 0,
+
+                df["Remaining_Coil"].sum()
+                if "Remaining_Coil" in df.columns
                 else 0,
 
                 df["Move_Coil"].sum()
@@ -67,21 +76,21 @@ def export_to_excel(df):
         engine="openpyxl"
     ) as writer:
 
-        # Summary Sheet
+        # Summary
         summary.to_excel(
             writer,
             sheet_name="Summary",
             index=False
         )
 
-        # Data Sheet
+        # Raw Data
         df.to_excel(
             writer,
             sheet_name="Data",
             index=False
         )
 
-        # Top Buyer Sheet
+        # Buyer Summary
         if (
             "Buyer" in df.columns
             and "Outstanding" in df.columns
@@ -103,7 +112,7 @@ def export_to_excel(df):
                 index=False
             )
 
-        # Customer Sheet
+        # Customer Summary
         if (
             "End Cust." in df.columns
             and "Outstanding" in df.columns
@@ -122,6 +131,28 @@ def export_to_excel(df):
             customer_summary.to_excel(
                 writer,
                 sheet_name="Customer Summary",
+                index=False
+            )
+
+        # Grade Summary
+        if (
+            "Com.SG" in df.columns
+            and "Outstanding" in df.columns
+        ):
+
+            grade_summary = (
+                df.groupby("Com.SG")["Outstanding"]
+                .sum()
+                .reset_index()
+                .sort_values(
+                    "Outstanding",
+                    ascending=False
+                )
+            )
+
+            grade_summary.to_excel(
+                writer,
+                sheet_name="Grade Summary",
                 index=False
             )
 
