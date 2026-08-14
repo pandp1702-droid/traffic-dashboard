@@ -11,22 +11,22 @@ def export_to_excel(df):
     # =====================================
 
     executive_summary = pd.DataFrame({
-        "Metric": [
-            "Orders",
-            "Outstanding",
-            "Not Produced",
-            "In Production",
-            "Ready To Ship",
-            "Total Coil",
-            "NC Coil",
-            "Production Add",
-            "Remaining Coil",
-            "Move Available",
+        "รายการ": [
+            "จำนวนออร์เดอร์",
+            "ค้างส่ง",
+            "คอยยังไม่ผลิต",
+            "คอยอยู่ระหว่างผลิต",
+            "คอยพร้อมส่ง",
+            "คอยทั้งหมด",
+            "คอยที่มีปัญหา",
+            "ผลิตเพิ่ม",
+            "คอยที่เหลือ",
+            "คอย Move ได้",
             "Move Qty",
-            "Balance To Produce",
-            "Old Orders"
+            "ต้องผลิตเพิ่ม",
+            "Old Order"
         ],
-        "Value": [
+        "ค่า": [
             len(df),
 
             df["Outstanding"].sum()
@@ -107,6 +107,17 @@ def export_to_excel(df):
             )
         )
 
+        buyer_scorecard.columns = [
+            "Buyer",
+            "ค้างส่ง",
+            "ผลิตเพิ่ม",
+            "NC",
+            "คอย Move ได้",
+            "Move Qty",
+            "ต้องผลิตเพิ่ม",
+            "คอยพร้อมส่ง"
+        ]
+
     # =====================================
     # CUSTOMER SUMMARY
     # =====================================
@@ -166,8 +177,8 @@ def export_to_excel(df):
         )
 
         move_status.columns = [
-            "Status",
-            "Count"
+            "สถานะ",
+            "จำนวน"
         ]
 
     # =====================================
@@ -242,8 +253,8 @@ def export_to_excel(df):
         )
 
         aging_summary.columns = [
-            "Aging Group",
-            "Count"
+            "อายุค้างส่ง",
+            "จำนวน"
         ]
 
     # =====================================
@@ -257,7 +268,7 @@ def export_to_excel(df):
 
         executive_summary.to_excel(
             writer,
-            sheet_name="Executive Summary",
+            sheet_name="สรุปผู้บริหาร",
             index=False
         )
 
@@ -270,42 +281,42 @@ def export_to_excel(df):
         if not buyer_scorecard.empty:
             buyer_scorecard.to_excel(
                 writer,
-                sheet_name="Buyer Scorecard",
+                sheet_name="สรุป Buyer",
                 index=False
             )
 
         if not customer_summary.empty:
             customer_summary.to_excel(
                 writer,
-                sheet_name="Customer Summary",
+                sheet_name="สรุปลูกค้า",
                 index=False
             )
 
         if not grade_summary.empty:
             grade_summary.to_excel(
                 writer,
-                sheet_name="Grade Summary",
+                sheet_name="สรุป Grade",
                 index=False
             )
 
         if not move_status.empty:
             move_status.to_excel(
                 writer,
-                sheet_name="Move Coil Status",
+                sheet_name="สถานะ Move Coil",
                 index=False
             )
 
         if not move_recommendation.empty:
             move_recommendation.to_excel(
                 writer,
-                sheet_name="Move Recommendation",
+                sheet_name="แนะนำ Move Coil",
                 index=False
             )
 
         if not planning_df.empty:
             planning_df.to_excel(
                 writer,
-                sheet_name="Production Planning",
+                sheet_name="แผนการผลิต",
                 index=False
             )
 
