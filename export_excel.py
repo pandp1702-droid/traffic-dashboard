@@ -7,11 +7,13 @@ def export_to_excel(df):
     output = io.BytesIO()
 
     # =====================================
-    # EXECUTIVE SUMMARY
+    # สรุปผู้บริหาร
     # =====================================
 
     executive_summary = pd.DataFrame({
+
         "รายการ": [
+
             "จำนวนออร์เดอร์",
             "ค้างส่ง",
             "คอยยังไม่ผลิต",
@@ -25,8 +27,11 @@ def export_to_excel(df):
             "Move Qty",
             "ต้องผลิตเพิ่ม",
             "Old Order"
+
         ],
+
         "ค่า": [
+
             len(df),
 
             df["Outstanding"].sum()
@@ -78,11 +83,13 @@ def export_to_excel(df):
             ).sum()
             if "Old_Order" in df.columns
             else 0
+
         ]
+
     })
 
     # =====================================
-    # BUYER SCORECARD
+    # สรุป Buyer
     # =====================================
 
     buyer_scorecard = pd.DataFrame()
@@ -107,19 +114,8 @@ def export_to_excel(df):
             )
         )
 
-        buyer_scorecard.columns = [
-            "Buyer",
-            "ค้างส่ง",
-            "ผลิตเพิ่ม",
-            "NC",
-            "คอย Move ได้",
-            "Move Qty",
-            "ต้องผลิตเพิ่ม",
-            "คอยพร้อมส่ง"
-        ]
-
     # =====================================
-    # CUSTOMER SUMMARY
+    # สรุปลูกค้า
     # =====================================
 
     customer_summary = pd.DataFrame()
@@ -142,7 +138,7 @@ def export_to_excel(df):
         )
 
     # =====================================
-    # GRADE SUMMARY
+    # สรุป Grade
     # =====================================
 
     grade_summary = pd.DataFrame()
@@ -163,7 +159,7 @@ def export_to_excel(df):
         )
 
     # =====================================
-    # MOVE COIL STATUS
+    # สถานะ Move Coil
     # =====================================
 
     move_status = pd.DataFrame()
@@ -182,7 +178,7 @@ def export_to_excel(df):
         ]
 
     # =====================================
-    # MOVE RECOMMENDATION
+    # แนะนำ Move Coil
     # =====================================
 
     move_recommendation = pd.DataFrame()
@@ -197,7 +193,7 @@ def export_to_excel(df):
         )
 
     # =====================================
-    # PRODUCTION PLANNING
+    # แผนการผลิต
     # =====================================
 
     planning_df = pd.DataFrame()
@@ -211,7 +207,7 @@ def export_to_excel(df):
         )
 
     # =====================================
-    # HIGH RISK
+    # High Risk Orders
     # =====================================
 
     high_risk_df = pd.DataFrame()
@@ -225,7 +221,7 @@ def export_to_excel(df):
         )
 
     # =====================================
-    # OLD ORDERS
+    # Old Orders
     # =====================================
 
     old_order_df = pd.DataFrame()
@@ -239,7 +235,7 @@ def export_to_excel(df):
         )
 
     # =====================================
-    # AGING SUMMARY
+    # Aging Summary
     # =====================================
 
     aging_summary = pd.DataFrame()
@@ -256,6 +252,21 @@ def export_to_excel(df):
             "อายุค้างส่ง",
             "จำนวน"
         ]
+
+    # =====================================
+    # ฟอร์ม Move Coil
+    # =====================================
+
+    move_form = pd.DataFrame()
+
+    if "Move_Coil_Result" in df.columns:
+
+        move_form = (
+            df[
+                df["Move_Coil_Result"]
+                != "CLOSED"
+            ]
+        )
 
     # =====================================
     # EXPORT
@@ -338,6 +349,13 @@ def export_to_excel(df):
             aging_summary.to_excel(
                 writer,
                 sheet_name="Aging Summary",
+                index=False
+            )
+
+        if not move_form.empty:
+            move_form.to_excel(
+                writer,
+                sheet_name="ฟอร์ม Move Coil",
                 index=False
             )
 
