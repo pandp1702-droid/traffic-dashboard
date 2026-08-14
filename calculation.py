@@ -37,11 +37,13 @@ def calculate(df):
     # NC
     # =====================================
 
-    df["NC"] = (
-        df["NC COIL"]
-        if "NC COIL" in df.columns
-        else 0
-    )
+    if "NC COIL" in df.columns:
+
+        df["NC"] = df["NC COIL"]
+
+    else:
+
+        df["NC"] = 0
 
     # =====================================
     # SPEC KEY
@@ -70,7 +72,7 @@ def calculate(df):
         df["SPEC_KEY"] = ""
 
     # =====================================
-    # SSI FORMULA
+    # OTHER + SUSPEND
     # =====================================
 
     df["Other_Suspend"] = (
@@ -78,10 +80,18 @@ def calculate(df):
         + df.get("Suspend+", 0)
     )
 
+    # =====================================
+    # REMAIN INSERT + SLAB CONFIRM
+    # =====================================
+
     df["Remain_Insert_Slab_Confirm"] = (
         df.get("Remain Insert", 0)
         + df.get("Slab Confirm", 0)
     )
+
+    # =====================================
+    # SAMPLE + TEST + PO WP + RDY SHP
+    # =====================================
 
     df["Sample_Test_WP_Rdy"] = (
         df.get("Sample+", 0)
@@ -90,15 +100,27 @@ def calculate(df):
         + df.get("Rdy Shp+", 0)
     )
 
+    # =====================================
+    # COIL INVENTORY
+    # =====================================
+
     df["Coil_Inv"] = (
         df["Other_Suspend"]
         + df["Sample_Test_WP_Rdy"]
     )
 
+    # =====================================
+    # SUM
+    # =====================================
+
     df["Sum"] = (
         df["Remain_Insert_Slab_Confirm"]
         + df["Coil_Inv"]
     )
+
+    # =====================================
+    # OUTSTANDING
+    # =====================================
 
     if "Ord QTY+" in df.columns:
 
@@ -193,11 +215,16 @@ def calculate(df):
     # MOVE STATUS
     # =====================================
 
-    df["Move_Status"] = np.where(
-        df["Move_Available"] > 0,
-        "Move Out",
-        ""
+    df["Move_Status"] = ""
+
+    move_out_mask = (
+        df["Move_Available"] > 0
     )
+
+    df.loc[
+        move_out_mask,
+        "Move_Status"
+    ] = "Move Out"
 
     move_in_mask = (
         df["Outstanding"] > 0
@@ -235,6 +262,7 @@ def calculate(df):
         - df["Move_Qty"]
     )
 
+    # V20 ยังไม่ Match จริง
     df["Move_From_Order"] = ""
 
     # =====================================
@@ -268,7 +296,7 @@ def calculate(df):
     )
 
     # =====================================
-    # ORDER STATUS
+    # ORDER+
     # =====================================
 
     df["Order_Plus"] = np.where(
@@ -276,6 +304,10 @@ def calculate(df):
         "YES",
         "NO"
     )
+
+    # =====================================
+    # CLOSE ORDER
+    # =====================================
 
     df["Close_Order"] = np.where(
         (
@@ -315,7 +347,9 @@ def calculate(df):
         df["Sample_Test_WP_Rdy"]
     )
 
-    df["Problem_Coil"] = df["NC"]
+    df["Problem_Coil"] = (
+        df["NC"]
+    )
 
     df["Total_Coil"] = (
         df["Not_Produced"]
@@ -342,4 +376,5 @@ def calculate(df):
 
         df["Old_Order"] = np.where(
             aging_days > 90,
-      
+            "YES",
+            "NO"
