@@ -116,6 +116,28 @@ def export_to_excel(df):
         )
 
     # =====================================
+    # Spec Summary
+    # =====================================
+
+    spec_summary = pd.DataFrame()
+
+    if "SPEC_KEY" in df.columns:
+
+        spec_summary = (
+            df.groupby("SPEC_KEY")
+            .agg({
+                "Outstanding": "sum",
+                "Production_Add": "sum",
+                "Move_Qty": "sum"
+            })
+            .reset_index()
+            .sort_values(
+                "Outstanding",
+                ascending=False
+            )
+        )
+
+    # =====================================
     # สถานะ Move Coil
     # =====================================
 
@@ -133,6 +155,20 @@ def export_to_excel(df):
             "สถานะ",
             "จำนวน"
         ]
+
+    # =====================================
+    # Move Flow
+    # =====================================
+
+    move_flow = pd.DataFrame()
+
+    if "Move_Status" in df.columns:
+
+        move_flow = (
+            df[
+                df["Move_Status"] != ""
+            ]
+        )
 
     # =====================================
     # แนะนำ Move Coil
@@ -267,6 +303,13 @@ def export_to_excel(df):
                 index=False
             )
 
+        if not spec_summary.empty:
+            spec_summary.to_excel(
+                writer,
+                sheet_name="Spec Summary",
+                index=False
+            )
+
         if not move_status.empty:
             move_status.to_excel(
                 writer,
@@ -274,5 +317,55 @@ def export_to_excel(df):
                 index=False
             )
 
+        if not move_flow.empty:
+            move_flow.to_excel(
+                writer,
+                sheet_name="Move Flow",
+                index=False
+            )
+
         if not move_recommendation.empty:
-            
+            move_recommendation.to_excel(
+                writer,
+                sheet_name="แนะนำ Move Coil",
+                index=False
+            )
+
+        if not planning_df.empty:
+            planning_df.to_excel(
+                writer,
+                sheet_name="แผนการผลิต",
+                index=False
+            )
+
+        if not high_risk_df.empty:
+            high_risk_df.to_excel(
+                writer,
+                sheet_name="High Risk Orders",
+                index=False
+            )
+
+        if not old_order_df.empty:
+            old_order_df.to_excel(
+                writer,
+                sheet_name="Old Orders",
+                index=False
+            )
+
+        if not aging_summary.empty:
+            aging_summary.to_excel(
+                writer,
+                sheet_name="Aging Summary",
+                index=False
+            )
+
+        if not move_form.empty:
+            move_form.to_excel(
+                writer,
+                sheet_name="ฟอร์ม Move Coil",
+                index=False
+            )
+
+    output.seek(0)
+
+    return output.getvalue()
