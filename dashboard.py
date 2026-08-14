@@ -7,14 +7,12 @@ def show_dashboard(df):
     st.markdown(
         """
         <style>
-
         div[data-testid="metric-container"] {
             background-color: #f8f9fa;
             border: 1px solid #d0d7de;
             padding: 15px;
             border-radius: 12px;
         }
-
         </style>
         """,
         unsafe_allow_html=True
@@ -26,23 +24,24 @@ def show_dashboard(df):
         "Upload SAP Export → Calculate → Dashboard → Export Report"
     )
 
-    tab1, tab2, tab3, tab4, tab5 = st.tabs(
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(
         [
             "Executive",
             "Buyer",
             "Customer",
             "Detail",
-            "Move Coil"
+            "Move Coil",
+            "Planning"
         ]
     )
 
-    # =====================================
+    # ==================================================
     # EXECUTIVE
-    # =====================================
+    # ==================================================
 
     with tab1:
 
-        st.subheader("SSI Traffic KPI")
+        st.subheader("SSI KPI")
 
         k1, k2, k3, k4 = st.columns(4)
 
@@ -106,63 +105,46 @@ def show_dashboard(df):
             (
                 df["Old_Order"] == "YES"
             ).sum()
-            if "Old_Order" in df.columns
-            else 0
+            if "Old_Order" in df.columns else 0
         )
 
         st.divider()
-
-        # =====================================
-        # MOVE KPI
-        # =====================================
 
         m1, m2, m3, m4 = st.columns(4)
 
         m1.metric(
             "Move Coil",
             (
-                df["Move_Coil_Result"]
-                == "MOVE COIL"
+                df["Move_Coil_Result"] == "MOVE COIL"
             ).sum()
-            if "Move_Coil_Result" in df.columns
-            else 0
+            if "Move_Coil_Result" in df.columns else 0
         )
 
         m2.metric(
             "Move + Produce",
             (
-                df["Move_Coil_Result"]
-                == "MOVE + PRODUCE"
+                df["Move_Coil_Result"] == "MOVE + PRODUCE"
             ).sum()
-            if "Move_Coil_Result" in df.columns
-            else 0
+            if "Move_Coil_Result" in df.columns else 0
         )
 
         m3.metric(
             "Produce Only",
             (
-                df["Move_Coil_Result"]
-                == "PRODUCE ONLY"
+                df["Move_Coil_Result"] == "PRODUCE ONLY"
             ).sum()
-            if "Move_Coil_Result" in df.columns
-            else 0
+            if "Move_Coil_Result" in df.columns else 0
         )
 
         m4.metric(
             "High Priority",
             (
-                df["Move_Priority"]
-                == "HIGH"
+                df["Move_Priority"] == "HIGH"
             ).sum()
-            if "Move_Priority" in df.columns
-            else 0
+            if "Move_Priority" in df.columns else 0
         )
 
         st.divider()
-
-        # =====================================
-        # MOVE STATUS
-        # =====================================
 
         if "Move_Coil_Result" in df.columns:
 
@@ -177,9 +159,7 @@ def show_dashboard(df):
                 "Count"
             ]
 
-            st.subheader(
-                "Move Coil Status"
-            )
+            st.subheader("Move Coil Status")
 
             fig_move = px.pie(
                 move_status,
@@ -192,10 +172,6 @@ def show_dashboard(df):
                 fig_move,
                 use_container_width=True
             )
-
-        # =====================================
-        # AGING
-        # =====================================
 
         if "Aging_Group" in df.columns:
 
@@ -210,9 +186,7 @@ def show_dashboard(df):
                 "Count"
             ]
 
-            st.subheader(
-                "Aging Dashboard"
-            )
+            st.subheader("Aging Dashboard")
 
             fig_aging = px.pie(
                 aging_df,
@@ -226,42 +200,71 @@ def show_dashboard(df):
                 use_container_width=True
             )
 
-        # =====================================
-        # GRADE
-        # =====================================
+    # ==================================================
+    # BUYER
+    # ==================================================
 
-        if (
-            "Com.SG" in df.columns
-            and "Outstanding" in df.columns
-        ):
+    with tab2:
 
-            grade_df = (
-                df.groupby("Com.SG")
-                ["Outstanding"]
-                .sum()
+        st.subheader("Buyer Scorecard")
+
+        if "Buyer" in df.columns:
+
+            buyer_df = (
+                df.groupby("Buyer")
+                .agg({
+                    "Outstanding": "sum",
+                    "Production_Add": "sum",
+                    "NC": "sum",
+                    "Move_Available": "sum",
+                    "Ready_To_Ship": "sum"
+                })
                 .reset_index()
                 .sort_values(
                     "Outstanding",
                     ascending=False
                 )
-                .head(20)
             )
 
-            st.subheader(
-                "Outstanding By Grade"
+            st.dataframe(
+                buyer_df,
+                use_container_width=True
             )
 
-            fig_grade = px.bar(
-                grade_df,
-                x="Com.SG",
+            fig_buyer = px.bar(
+                buyer_df.head(20),
+                x="Buyer",
                 y="Outstanding",
                 color="Outstanding"
             )
 
             st.plotly_chart(
-                fig_grade,
+                fig_buyer,
                 use_container_width=True
             )
 
-        # =====================================
-       
+    # ==================================================
+    # CUSTOMER
+    # ==================================================
+
+    with tab3:
+
+        st.subheader("Customer Summary")
+
+        if "End Cust." in df.columns:
+
+            customer_df = (
+                df.groupby("End Cust.")
+                .agg({
+                    "Outstanding": "sum",
+                    "Production_Add": "sum",
+                    "NC": "sum"
+                })
+                .reset_index()
+                .sort_values(
+                    "Outstanding",
+                    ascending=False
+                )
+            )
+
+ 
