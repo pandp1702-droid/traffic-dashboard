@@ -24,16 +24,17 @@ def show_dashboard(df):
         "Upload SAP Export → Calculate → Dashboard → Export Report"
     )
 
-    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(
-        [
-            "Executive",
-            "Buyer",
-            "Customer",
-            "Detail",
-            "Move Coil",
-            "Planning"
-        ]
-    )
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(
+    [
+        "Executive",
+        "Buyer",
+        "Customer",
+        "Detail",
+        "Move Coil",
+        "Planning",
+        "Move Form"
+    ]
+)
 
     # ==================================================
     # EXECUTIVE
