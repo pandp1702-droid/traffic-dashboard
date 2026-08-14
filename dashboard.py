@@ -4,22 +4,6 @@ import plotly.express as px
 
 def show_dashboard(df):
 
-    st.markdown(
-        """
-        <style>
-
-        div[data-testid="metric-container"] {
-            background-color: #f8f9fa;
-            border: 1px solid #d0d7de;
-            padding: 15px;
-            border-radius: 12px;
-        }
-
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
-
     st.title("🚛 SSI Traffic Management Dashboard")
 
     st.caption(
@@ -38,77 +22,52 @@ def show_dashboard(df):
         ]
     )
 
-    # ==================================================
+    # =====================================
     # EXECUTIVE
-    # ==================================================
+    # =====================================
 
     with tab1:
 
-        st.subheader("SSI Traffic KPI")
+        c1, c2, c3, c4 = st.columns(4)
 
-        k1, k2, k3, k4 = st.columns(4)
-
-        k1.metric(
-            "Orders",
-            len(df)
-        )
-
-        k2.metric(
+        c1.metric(
             "Outstanding",
             round(
                 df["Outstanding"].sum(),
                 2
-            ) if "Outstanding" in df.columns else 0
+            )
+            if "Outstanding" in df.columns
+            else 0
         )
 
-        k3.metric(
+        c2.metric(
             "Production Add",
             round(
                 df["Production_Add"].sum(),
                 2
-            ) if "Production_Add" in df.columns else 0
+            )
+            if "Production_Add" in df.columns
+            else 0
         )
 
-        k4.metric(
+        c3.metric(
             "NC Coil",
             round(
                 df["NC"].sum(),
                 2
-            ) if "NC" in df.columns else 0
+            )
+            if "NC" in df.columns
+            else 0
         )
 
-        k5, k6, k7, k8 = st.columns(4)
-
-        k5.metric(
-            "Ready To Ship",
+        c4.metric(
+            "Move Available",
             round(
-                df["Ready_To_Ship"].sum(),
+                df["Move_Available"].sum(),
                 2
-            ) if "Ready_To_Ship" in df.columns else 0
-        )
-
-        k6.metric(
-            "Total Coil",
-            round(
-                df["Total_Coil"].sum(),
-                2
-            ) if "Total_Coil" in df.columns else 0
-        )
-
-        k7.metric(
-            "Remaining Coil",
-            round(
-                df["Remaining_Coil"].sum(),
-                2
-            ) if "Remaining_Coil" in df.columns else 0
-        )
-
-        k8.metric(
-            "Old Orders",
-            (
-                df["Old_Order"] == "YES"
-            ).sum()
-            if "Old_Order" in df.columns else 0
+            )
+            if "Move_Available" in df.columns
+            else 0
         )
 
         st.divider()
@@ -121,7 +80,8 @@ def show_dashboard(df):
                 df["Move_Coil_Result"]
                 == "MOVE COIL"
             ).sum()
-            if "Move_Coil_Result" in df.columns else 0
+            if "Move_Coil_Result" in df.columns
+            else 0
         )
 
         m2.metric(
@@ -130,7 +90,8 @@ def show_dashboard(df):
                 df["Move_Coil_Result"]
                 == "MOVE + PRODUCE"
             ).sum()
-            if "Move_Coil_Result" in df.columns else 0
+            if "Move_Coil_Result" in df.columns
+            else 0
         )
 
         m3.metric(
@@ -139,7 +100,8 @@ def show_dashboard(df):
                 df["Move_Coil_Result"]
                 == "PRODUCE ONLY"
             ).sum()
-            if "Move_Coil_Result" in df.columns else 0
+            if "Move_Coil_Result" in df.columns
+            else 0
         )
 
         m4.metric(
@@ -148,7 +110,8 @@ def show_dashboard(df):
                 df["Move_Priority"]
                 == "HIGH"
             ).sum()
-            if "Move_Priority" in df.columns else 0
+            if "Move_Priority" in df.columns
+            else 0
         )
 
         st.divider()
@@ -165,10 +128,6 @@ def show_dashboard(df):
                 "Status",
                 "Count"
             ]
-
-            st.subheader(
-                "Move Coil Status"
-            )
 
             fig_move = px.pie(
                 move_status,
@@ -195,10 +154,6 @@ def show_dashboard(df):
                 "Count"
             ]
 
-            st.subheader(
-                "Aging Dashboard"
-            )
-
             fig_aging = px.pie(
                 aging_df,
                 names="Aging",
@@ -211,9 +166,9 @@ def show_dashboard(df):
                 use_container_width=True
             )
 
-    # ==================================================
+    # =====================================
     # BUYER
-    # ==================================================
+    # =====================================
 
     with tab2:
 
@@ -244,21 +199,9 @@ def show_dashboard(df):
                 use_container_width=True
             )
 
-            fig_buyer = px.bar(
-                buyer_df.head(20),
-                x="Buyer",
-                y="Outstanding",
-                color="Outstanding"
-            )
-
-            st.plotly_chart(
-                fig_buyer,
-                use_container_width=True
-            )
-
-    # ==================================================
+    # =====================================
     # CUSTOMER
-    # ==================================================
+    # =====================================
 
     with tab3:
 
@@ -274,164 +217,4 @@ def show_dashboard(df):
                     "Outstanding": "sum",
                     "Production_Add": "sum",
                     "NC": "sum"
-                })
-                .reset_index()
-                .sort_values(
-                    "Outstanding",
-                    ascending=False
-                )
-            )
-
-            st.dataframe(
-                customer_df,
-                use_container_width=True
-            )
-
-            fig_customer = px.bar(
-                customer_df.head(20),
-                x="End Cust.",
-                y="Outstanding",
-                color="Outstanding"
-            )
-
-            st.plotly_chart(
-                fig_customer,
-                use_container_width=True
-            )
-
-    # ==================================================
-    # DETAIL
-    # ==================================================
-
-    with tab4:
-
-        st.subheader("Detail Data")
-
-        st.dataframe(
-            df,
-            use_container_width=True,
-            height=700
-        )
-
-    # ==================================================
-    # MOVE COIL
-    # ==================================================
-
-    with tab5:
-
-        st.subheader(
-            "Move Coil Recommendation"
-        )
-
-        move_df = df.copy()
-
-        if "Move_Coil_Result" in move_df.columns:
-
-            move_df = move_df[
-                move_df["Move_Coil_Result"] != "CLOSED"
-            ]
-
-            display_cols = [
-                c for c in [
-                    "OrderNo",
-                    "Buyer",
-                    "End Cust.",
-                    "SPEC_KEY",
-                    "Outstanding",
-                    "Move_Available",
-                    "Move_Qty",
-                    "Move_From_Order",
-                    "Balance_To_Produce",
-                    "Move_Coil_Result",
-                    "Move_Priority"
-                ]
-                if c in move_df.columns
-            ]
-
-            st.dataframe(
-                move_df[display_cols],
-                use_container_width=True,
-                height=700
-            )
-
-    # ==================================================
-    # PLANNING
-    # ==================================================
-
-    with tab6:
-
-        st.subheader(
-            "Production Planning"
-        )
-
-        planning_df = df[
-            df["Outstanding"] > 0
-        ].copy()
-
-        cols = [
-            c for c in [
-                "OrderNo",
-                "Buyer",
-                "End Cust.",
-                "SPEC_KEY",
-                "Outstanding",
-                "Move_Qty",
-                "Balance_To_Produce",
-                "Move_Priority"
-            ]
-            if c in planning_df.columns
-        ]
-
-        st.dataframe(
-            planning_df[cols],
-            use_container_width=True,
-            height=700
-        )
-
-    # ==================================================
-    # MOVE FORM
-    # ==================================================
-
-    with tab7:
-
-        st.subheader(
-            "SSI Move Coil Form"
-        )
-
-        move_form = df.copy()
-
-        if "Move_Coil_Result" in move_form.columns:
-
-            move_form = move_form[
-                move_form["Move_Coil_Result"]
-                != "CLOSED"
-            ]
-
-            form_cols = [
-                c for c in [
-                    "OrderNo",
-                    "Item",
-                    "Buyer",
-                    "End Cust.",
-                    "Prod Cd",
-                    "Com.SG",
-                    "Equi  Grade",
-                    "EndUse",
-                    "Thk",
-                    "Wid",
-                    "Move_From_Order",
-                    "Move_Qty",
-                    "Balance_To_Produce",
-                    "Move_Coil_Result",
-                    "Move_Priority",
-                    "Result_After_Check",
-                    "Remark"
-                ]
-                if c in move_form.columns
-            ]
-
-            st.dataframe(
-                move_form[form_cols],
-                use_container_width=True,
-                height=700
-            )
+ 
