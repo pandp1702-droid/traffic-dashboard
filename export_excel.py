@@ -11,9 +11,7 @@ def export_to_excel(df):
     # =====================================
 
     executive_summary = pd.DataFrame({
-
         "รายการ": [
-
             "จำนวนออร์เดอร์",
             "ค้างส่ง",
             "คอยยังไม่ผลิต",
@@ -27,11 +25,8 @@ def export_to_excel(df):
             "Move Qty",
             "ต้องผลิตเพิ่ม",
             "Old Order"
-
         ],
-
         "ค่า": [
-
             len(df),
 
             df["Outstanding"].sum()
@@ -83,9 +78,7 @@ def export_to_excel(df):
             ).sum()
             if "Old_Order" in df.columns
             else 0
-
         ]
-
     })
 
     # =====================================
