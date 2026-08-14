@@ -56,7 +56,9 @@ def show_dashboard(df):
             round(
                 df["Outstanding"].sum(),
                 2
-            ) if "Outstanding" in df.columns else 0
+            )
+            if "Outstanding" in df.columns
+            else 0
         )
 
         k3.metric(
@@ -64,7 +66,9 @@ def show_dashboard(df):
             round(
                 df["Production_Add"].sum(),
                 2
-            ) if "Production_Add" in df.columns else 0
+            )
+            if "Production_Add" in df.columns
+            else 0
         )
 
         k4.metric(
@@ -72,7 +76,9 @@ def show_dashboard(df):
             round(
                 df["NC"].sum(),
                 2
-            ) if "NC" in df.columns else 0
+            )
+            if "NC" in df.columns
+            else 0
         )
 
         k5, k6, k7, k8 = st.columns(4)
@@ -82,7 +88,9 @@ def show_dashboard(df):
             round(
                 df["Ready_To_Ship"].sum(),
                 2
-            ) if "Ready_To_Ship" in df.columns else 0
+            )
+            if "Ready_To_Ship" in df.columns
+            else 0
         )
 
         k6.metric(
@@ -90,7 +98,9 @@ def show_dashboard(df):
             round(
                 df["Total_Coil"].sum(),
                 2
-            ) if "Total_Coil" in df.columns else 0
+            )
+            if "Total_Coil" in df.columns
+            else 0
         )
 
         k7.metric(
@@ -98,7 +108,9 @@ def show_dashboard(df):
             round(
                 df["Remaining_Coil"].sum(),
                 2
-            ) if "Remaining_Coil" in df.columns else 0
+            )
+            if "Remaining_Coil" in df.columns
+            else 0
         )
 
         k8.metric(
@@ -189,7 +201,7 @@ def show_dashboard(df):
                 use_container_width=True
             )
 
-        # Aging
+        # Aging Dashboard
 
         if "Aging_Group" in df.columns:
 
@@ -220,6 +232,41 @@ def show_dashboard(df):
                 use_container_width=True
             )
 
+        # Grade Analysis
+
+        if (
+            "Com.SG" in df.columns
+            and "Outstanding" in df.columns
+        ):
+
+            grade_df = (
+                df.groupby("Com.SG")
+                ["Outstanding"]
+                .sum()
+                .reset_index()
+                .sort_values(
+                    "Outstanding",
+                    ascending=False
+                )
+                .head(20)
+            )
+
+            st.subheader(
+                "Outstanding By Grade"
+            )
+
+            fig_grade = px.bar(
+                grade_df,
+                x="Com.SG",
+                y="Outstanding",
+                color="Outstanding"
+            )
+
+            st.plotly_chart(
+                fig_grade,
+                use_container_width=True
+            )
+
     # ==================================================
     # BUYER
     # ==================================================
@@ -241,7 +288,8 @@ def show_dashboard(df):
                     "Outstanding": "sum",
                     "Production_Add": "sum",
                     "NC": "sum",
-                    "Move_Available": "sum"
+                    "Move_Available": "sum",
+                    "Ready_To_Ship": "sum"
                 })
                 .reset_index()
                 .sort_values(
@@ -325,8 +373,8 @@ def show_dashboard(df):
 
         st.dataframe(
             df,
-            height=700,
-            use_container_width=True
+            use_container_width=True,
+            height=700
         )
 
     # ==================================================
@@ -366,27 +414,4 @@ def show_dashboard(df):
                 move_df[display_cols],
                 use_container_width=True,
                 height=700
-            )
-
-            status_df = (
-                move_df["Move_Coil_Result"]
-                .value_counts()
-                .reset_index()
-            )
-
-            status_df.columns = [
-                "Status",
-                "Count"
-            ]
-
-            fig_status = px.bar(
-                status_df,
-                x="Status",
-                y="Count",
-                color="Count"
-            )
-
-            st.plotly_chart(
-                fig_status,
-                use_container_width=True
             )
