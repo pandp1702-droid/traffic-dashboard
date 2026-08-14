@@ -134,6 +134,8 @@ def show_dashboard(df):
 
         st.divider()
 
+        # Status Move Coil
+
         if "Move_Coil_Result" in df.columns:
 
             move_status = (
@@ -147,7 +149,9 @@ def show_dashboard(df):
                 "จำนวน"
             ]
 
-            st.subheader("สถานะ Move Coil")
+            st.subheader(
+                "สถานะ Move Coil"
+            )
 
             fig_move = px.pie(
                 move_status,
@@ -160,6 +164,8 @@ def show_dashboard(df):
                 fig_move,
                 use_container_width=True
             )
+
+        # Aging Dashboard
 
         if "Aging_Group" in df.columns:
 
@@ -174,7 +180,9 @@ def show_dashboard(df):
                 "จำนวน"
             ]
 
-            st.subheader("อายุค้างส่ง")
+            st.subheader(
+                "อายุค้างส่ง"
+            )
 
             fig_aging = px.pie(
                 aging_df,
@@ -194,7 +202,9 @@ def show_dashboard(df):
 
     with tab2:
 
-        st.subheader("สรุปตาม Buyer")
+        st.subheader(
+            "สรุปตาม Buyer"
+        )
 
         if "Buyer" in df.columns:
 
@@ -226,7 +236,9 @@ def show_dashboard(df):
 
     with tab3:
 
-        st.subheader("สรุปลูกค้า")
+        st.subheader(
+            "สรุปลูกค้า"
+        )
 
         if "End Cust." in df.columns:
 
@@ -252,7 +264,9 @@ def show_dashboard(df):
 
     with tab4:
 
-        st.subheader("รายละเอียดข้อมูล")
+        st.subheader(
+            "รายละเอียดข้อมูล"
+        )
 
         st.dataframe(
             df,
@@ -266,7 +280,9 @@ def show_dashboard(df):
 
     with tab5:
 
-        st.subheader("แนะนำ Move Coil")
+        st.subheader(
+            "แนะนำ Move Coil"
+        )
 
         move_df = df.copy()
 
@@ -305,7 +321,9 @@ def show_dashboard(df):
 
     with tab6:
 
-        st.subheader("แผนการผลิต")
+        st.subheader(
+            "แผนการผลิต"
+        )
 
         planning_df = df[
             df["Outstanding"] > 0
@@ -336,7 +354,9 @@ def show_dashboard(df):
 
     with tab7:
 
-        st.subheader("ฟอร์ม Move Coil")
+        st.subheader(
+            "ฟอร์ม Move Coil"
+        )
 
         move_form = df.copy()
 
