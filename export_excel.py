@@ -180,7 +180,7 @@ def export_to_excel(df):
         )
 
     # =====================================
-    # HIGH RISK
+    # HIGH RISK ORDERS
     # =====================================
 
     high_risk_df = pd.DataFrame()
@@ -189,8 +189,7 @@ def export_to_excel(df):
 
         high_risk_df = (
             df[
-                df["High_Risk"]
-                == "YES"
+                df["High_Risk"] == "YES"
             ]
         )
 
@@ -204,8 +203,7 @@ def export_to_excel(df):
 
         old_order_df = (
             df[
-                df["Old_Order"]
-                == "YES"
+                df["Old_Order"] == "YES"
             ]
         )
 
