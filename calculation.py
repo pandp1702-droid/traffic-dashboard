@@ -44,7 +44,6 @@ def calculate(df):
 
     # =====================================
     # SPEC KEY
-    # Com.SG + Equi Grade + EndUse + Thk + Cert.Cust.
     # =====================================
 
     key_cols = [
@@ -70,7 +69,7 @@ def calculate(df):
         df["SPEC_KEY"] = ""
 
     # =====================================
-    # Other + Suspend
+    # OTHER + SUSPEND
     # =====================================
 
     df["Other_Suspend"] = (
@@ -79,7 +78,7 @@ def calculate(df):
     )
 
     # =====================================
-    # Remain Insert + Slab Confirm
+    # REMAIN INSERT + SLAB CONFIRM
     # =====================================
 
     df["Remain_Insert_Slab_Confirm"] = (
@@ -88,7 +87,7 @@ def calculate(df):
     )
 
     # =====================================
-    # Sample + Test + P&O WP + Rdy Shp
+    # SAMPLE + TEST + PO WP + RDY SHP
     # =====================================
 
     df["Sample_Test_WP_Rdy"] = (
@@ -99,7 +98,7 @@ def calculate(df):
     )
 
     # =====================================
-    # Coil Inv
+    # COIL INVENTORY
     # =====================================
 
     df["Coil_Inv"] = (
@@ -108,7 +107,7 @@ def calculate(df):
     )
 
     # =====================================
-    # Sum
+    # SUM
     # =====================================
 
     df["Sum"] = (
@@ -117,8 +116,7 @@ def calculate(df):
     )
 
     # =====================================
-    # Outstanding
-    # Ord Qty - Sum
+    # OUTSTANDING
     # =====================================
 
     if "Ord QTY+" in df.columns:
@@ -133,8 +131,7 @@ def calculate(df):
         df["Outstanding"] = 0
 
     # =====================================
-    # Production Add
-    # IF((NC-CoilInv)<4,0,(NC-CoilInv))
+    # PRODUCTION ADD
     # =====================================
 
     df["Production_Add"] = np.where(
@@ -144,7 +141,7 @@ def calculate(df):
     )
 
     # =====================================
-    # Remaining Coil
+    # REMAINING COIL
     # =====================================
 
     remaining = np.where(
@@ -165,8 +162,7 @@ def calculate(df):
     )
 
     # =====================================
-    # Move Available
-    # Sample + Test + P&O WP + Rdy Shp
+    # MOVE AVAILABLE
     # =====================================
 
     df["Move_Available"] = (
@@ -177,7 +173,7 @@ def calculate(df):
     )
 
     # =====================================
-    # Move Recommendation
+    # MOVE RESULT
     # =====================================
 
     df["Move_Coil_Result"] = np.where(
@@ -195,7 +191,7 @@ def calculate(df):
     )
 
     # =====================================
-    # Move Priority
+    # MOVE PRIORITY
     # =====================================
 
     df["Move_Priority"] = np.select(
@@ -213,7 +209,7 @@ def calculate(df):
     )
 
     # =====================================
-    # Move Planning
+    # MOVE PLANNING
     # =====================================
 
     df["Move_Qty"] = np.minimum(
@@ -232,11 +228,10 @@ def calculate(df):
         - df["Move_Qty"]
     )
 
-    # ยังไม่ทำ Matching จริง
     df["Move_From_Order"] = ""
 
     # =====================================
-    # Result After Check
+    # RESULT AFTER CHECK
     # =====================================
 
     df["Result_After_Check"] = np.where(
@@ -250,7 +245,7 @@ def calculate(df):
     )
 
     # =====================================
-    # Remark
+    # REMARK
     # =====================================
 
     df["Remark"] = np.where(
@@ -264,43 +259,8 @@ def calculate(df):
     )
 
     # =====================================
-    # Order+
+    # ORDER+
     # =====================================
 
     df["Order_Plus"] = np.where(
-        df["Production_Add"] > 3.999,
-        "YES",
-        "NO"
-    )
-
-    # =====================================
-    # Close Order
-    # =====================================
-
-    df["Close_Order"] = np.where(
-        (
-            df["Production_Add"] < 3.999
-        )
-        &
-        (
-            df["Sum"] == 0
-        ),
-        "ปิด",
-        "Failed"
-    )
-
-    # =====================================
-    # High Risk
-    # =====================================
-
-    df["High_Risk"] = np.where(
-        df["Production_Add"] > 0,
-        "YES",
-        "NO"
-    )
-
-    # =====================================
-    # SSI KPI
-    # =====================================
-
-    df["Not_Produced"] = 
+        df["
