@@ -38,15 +38,18 @@ def calculate(df):
     # =====================================
 
     if "NC COIL" in df.columns:
+
         df["NC"] = df["NC COIL"]
+
     else:
+
         df["NC"] = 0
 
     # =====================================
     # SPEC KEY
     # =====================================
 
-    key_cols = [
+    required_cols = [
         "Com.SG",
         "Equi  Grade",
         "EndUse",
@@ -54,7 +57,7 @@ def calculate(df):
         "Cert. Cust."
     ]
 
-    if all(col in df.columns for col in key_cols):
+    if all(col in df.columns for col in required_cols):
 
         df["SPEC_KEY"] = (
             df["Com.SG"].astype(str)
@@ -98,7 +101,7 @@ def calculate(df):
     )
 
     # =====================================
-    # COIL INVENTORY
+    # COIL INV
     # =====================================
 
     df["Coil_Inv"] = (
@@ -132,6 +135,7 @@ def calculate(df):
 
     # =====================================
     # PRODUCTION ADD
+    # IF((NC-CoilInv)<4,0,(NC-CoilInv))
     # =====================================
 
     df["Production_Add"] = np.where(
@@ -151,8 +155,8 @@ def calculate(df):
     )
 
     remaining = np.maximum(
-        0,
-        remaining
+        remaining,
+        0
     )
 
     df["Remaining_Coil"] = np.where(
@@ -250,11 +254,11 @@ def calculate(df):
 
     df["Remark"] = np.where(
         df["Move_Coil_Result"] == "Move Coil",
-        "Move Available",
+        "สามารถ Move Coil ได้",
         np.where(
             df["Move_Coil_Result"] == "Move Coil + ผลิตเพิ่ม",
-            "Move Available แต่ต้องผลิตเพิ่ม",
-            "ไม่พบ Coil สำหรับ Move"
+            "Move Coil ได้บางส่วน ต้องผลิตเพิ่ม",
+            "ไม่พบ Coil สำหรับ Move ต้องผลิตเพิ่ม"
         )
     )
 
@@ -263,4 +267,110 @@ def calculate(df):
     # =====================================
 
     df["Order_Plus"] = np.where(
-        df["
+        df["Production_Add"] > 3.999,
+        "YES",
+        "NO"
+    )
+
+    # =====================================
+    # CLOSE ORDER
+    # =====================================
+
+    df["Close_Order"] = np.where(
+        (
+            df["Production_Add"] < 3.999
+        )
+        &
+        (
+            df["Sum"] == 0
+        ),
+        "ปิด",
+        "Failed"
+    )
+
+    # =====================================
+    # HIGH RISK
+    # =====================================
+
+    df["High_Risk"] = np.where(
+        df["Production_Add"] > 0,
+        "YES",
+        "NO"
+    )
+
+    # =====================================
+    # SSI KPI
+    # =====================================
+
+    df["Not_Produced"] = (
+        df["Remain_Insert_Slab_Confirm"]
+    )
+
+    df["In_Production"] = (
+        df["Other_Suspend"]
+    )
+
+    df["Ready_To_Ship"] = (
+        df["Sample_Test_WP_Rdy"]
+    )
+
+    df["Problem_Coil"] = (
+        df["NC"]
+    )
+
+    df["Total_Coil"] = (
+        df["Not_Produced"]
+        + df["In_Production"]
+        + df["Ready_To_Ship"]
+    )
+
+    # =====================================
+    # OLD ORDER / AGING
+    # =====================================
+
+    if "Last Shipment Date" in df.columns:
+
+        shipment_date = pd.to_datetime(
+            df["Last Shipment Date"].astype(str),
+            format="%Y%m%d",
+            errors="coerce"
+        )
+
+        aging_days = (
+            pd.Timestamp.today()
+            - shipment_date
+        ).dt.days
+
+        df["Old_Order"] = np.where(
+            aging_days > 90,
+            "YES",
+            "NO"
+        )
+
+        df["Shipment_Month"] = (
+            shipment_date.dt.strftime("%Y-%m")
+        )
+
+        df["Aging_Group"] = np.select(
+            [
+                aging_days <= 30,
+                aging_days <= 60,
+                aging_days <= 90,
+                aging_days > 90
+            ],
+            [
+                "0-30 Days",
+                "31-60 Days",
+                "61-90 Days",
+                "90+ Days"
+            ],
+            default="Unknown"
+        )
+
+    else:
+
+        df["Old_Order"] = "NO"
+        df["Shipment_Month"] = ""
+        df["Aging_Group"] = ""
+
+    return df
