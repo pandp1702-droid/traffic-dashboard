@@ -11,9 +11,7 @@ def export_to_excel(df):
     # =====================================
 
     executive_summary = pd.DataFrame({
-
         "Metric": [
-
             "Orders",
             "Outstanding",
             "Not Produced",
@@ -27,11 +25,8 @@ def export_to_excel(df):
             "Move Qty",
             "Balance To Produce",
             "Old Orders"
-
         ],
-
         "Value": [
-
             len(df),
 
             df["Outstanding"].sum()
@@ -83,7 +78,6 @@ def export_to_excel(df):
             ).sum()
             if "Old_Order" in df.columns
             else 0
-
         ]
     })
 
@@ -192,7 +186,7 @@ def export_to_excel(df):
         )
 
     # =====================================
-    # PLANNING
+    # PRODUCTION PLANNING
     # =====================================
 
     planning_df = pd.DataFrame()
@@ -274,7 +268,6 @@ def export_to_excel(df):
         )
 
         if not buyer_scorecard.empty:
-
             buyer_scorecard.to_excel(
                 writer,
                 sheet_name="Buyer Scorecard",
@@ -282,7 +275,6 @@ def export_to_excel(df):
             )
 
         if not customer_summary.empty:
-
             customer_summary.to_excel(
                 writer,
                 sheet_name="Customer Summary",
@@ -290,7 +282,6 @@ def export_to_excel(df):
             )
 
         if not grade_summary.empty:
-
             grade_summary.to_excel(
                 writer,
                 sheet_name="Grade Summary",
@@ -298,7 +289,6 @@ def export_to_excel(df):
             )
 
         if not move_status.empty:
-
             move_status.to_excel(
                 writer,
                 sheet_name="Move Coil Status",
@@ -306,7 +296,6 @@ def export_to_excel(df):
             )
 
         if not move_recommendation.empty:
-
             move_recommendation.to_excel(
                 writer,
                 sheet_name="Move Recommendation",
@@ -314,7 +303,6 @@ def export_to_excel(df):
             )
 
         if not planning_df.empty:
-
             planning_df.to_excel(
                 writer,
                 sheet_name="Production Planning",
@@ -322,7 +310,6 @@ def export_to_excel(df):
             )
 
         if not high_risk_df.empty:
-
             high_risk_df.to_excel(
                 writer,
                 sheet_name="High Risk Orders",
@@ -330,7 +317,6 @@ def export_to_excel(df):
             )
 
         if not old_order_df.empty:
-
             old_order_df.to_excel(
                 writer,
                 sheet_name="Old Orders",
@@ -338,7 +324,6 @@ def export_to_excel(df):
             )
 
         if not aging_summary.empty:
-
             aging_summary.to_excel(
                 writer,
                 sheet_name="Aging Summary",
