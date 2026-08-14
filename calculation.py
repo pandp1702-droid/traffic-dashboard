@@ -38,11 +38,8 @@ def calculate(df):
     # =====================================
 
     if "NC COIL" in df.columns:
-
         df["NC"] = df["NC COIL"]
-
     else:
-
         df["NC"] = 0
 
     # =====================================
@@ -262,7 +259,6 @@ def calculate(df):
         - df["Move_Qty"]
     )
 
-    # V20 ยังไม่ Match จริง
     df["Move_From_Order"] = ""
 
     # =====================================
@@ -273,8 +269,7 @@ def calculate(df):
         df["Move_Coil_Result"] == "Move Coil",
         "ผ่าน",
         np.where(
-            df["Move_Coil_Result"]
-            == "Move Coil + ผลิตเพิ่ม",
+            df["Move_Coil_Result"] == "Move Coil + ผลิตเพิ่ม",
             "ผ่านบางส่วน",
             "ต้องผลิตเพิ่ม"
         )
@@ -288,8 +283,7 @@ def calculate(df):
         df["Move_Coil_Result"] == "Move Coil",
         "สามารถ Move Coil ได้",
         np.where(
-            df["Move_Coil_Result"]
-            == "Move Coil + ผลิตเพิ่ม",
+            df["Move_Coil_Result"] == "Move Coil + ผลิตเพิ่ม",
             "Move Coil ได้บางส่วน ต้องผลิตเพิ่ม",
             "ไม่พบ Coil สำหรับ Move ต้องผลิตเพิ่ม"
         )
@@ -374,7 +368,4 @@ def calculate(df):
             - shipment_date
         ).dt.days
 
-        df["Old_Order"] = np.where(
-            aging_days > 90,
-            "YES",
-            "NO"
+        df["Old_Order"] 
