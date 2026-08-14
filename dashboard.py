@@ -7,12 +7,14 @@ def show_dashboard(df):
     st.markdown(
         """
         <style>
+
         div[data-testid="metric-container"] {
             background-color: #f8f9fa;
             border: 1px solid #d0d7de;
             padding: 15px;
             border-radius: 12px;
         }
+
         </style>
         """,
         unsafe_allow_html=True
@@ -25,16 +27,16 @@ def show_dashboard(df):
     )
 
     tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(
-    [
-        "Executive",
-        "Buyer",
-        "Customer",
-        "Detail",
-        "Move Coil",
-        "Planning",
-        "Move Form"
-    ]
-)
+        [
+            "Executive",
+            "Buyer",
+            "Customer",
+            "Detail",
+            "Move Coil",
+            "Planning",
+            "Move Form"
+        ]
+    )
 
     # ==================================================
     # EXECUTIVE
@@ -42,7 +44,7 @@ def show_dashboard(df):
 
     with tab1:
 
-        st.subheader("SSI KPI")
+        st.subheader("SSI Traffic KPI")
 
         k1, k2, k3, k4 = st.columns(4)
 
@@ -116,7 +118,8 @@ def show_dashboard(df):
         m1.metric(
             "Move Coil",
             (
-                df["Move_Coil_Result"] == "MOVE COIL"
+                df["Move_Coil_Result"]
+                == "MOVE COIL"
             ).sum()
             if "Move_Coil_Result" in df.columns else 0
         )
@@ -124,7 +127,8 @@ def show_dashboard(df):
         m2.metric(
             "Move + Produce",
             (
-                df["Move_Coil_Result"] == "MOVE + PRODUCE"
+                df["Move_Coil_Result"]
+                == "MOVE + PRODUCE"
             ).sum()
             if "Move_Coil_Result" in df.columns else 0
         )
@@ -132,7 +136,8 @@ def show_dashboard(df):
         m3.metric(
             "Produce Only",
             (
-                df["Move_Coil_Result"] == "PRODUCE ONLY"
+                df["Move_Coil_Result"]
+                == "PRODUCE ONLY"
             ).sum()
             if "Move_Coil_Result" in df.columns else 0
         )
@@ -140,7 +145,8 @@ def show_dashboard(df):
         m4.metric(
             "High Priority",
             (
-                df["Move_Priority"] == "HIGH"
+                df["Move_Priority"]
+                == "HIGH"
             ).sum()
             if "Move_Priority" in df.columns else 0
         )
@@ -160,7 +166,9 @@ def show_dashboard(df):
                 "Count"
             ]
 
-            st.subheader("Move Coil Status")
+            st.subheader(
+                "Move Coil Status"
+            )
 
             fig_move = px.pie(
                 move_status,
@@ -187,7 +195,9 @@ def show_dashboard(df):
                 "Count"
             ]
 
-            st.subheader("Aging Dashboard")
+            st.subheader(
+                "Aging Dashboard"
+            )
 
             fig_aging = px.pie(
                 aging_df,
@@ -207,7 +217,9 @@ def show_dashboard(df):
 
     with tab2:
 
-        st.subheader("Buyer Scorecard")
+        st.subheader(
+            "Buyer Scorecard"
+        )
 
         if "Buyer" in df.columns:
 
@@ -250,7 +262,9 @@ def show_dashboard(df):
 
     with tab3:
 
-        st.subheader("Customer Summary")
+        st.subheader(
+            "Customer Summary"
+        )
 
         if "End Cust." in df.columns:
 
@@ -268,4 +282,156 @@ def show_dashboard(df):
                 )
             )
 
- 
+            st.dataframe(
+                customer_df,
+                use_container_width=True
+            )
+
+            fig_customer = px.bar(
+                customer_df.head(20),
+                x="End Cust.",
+                y="Outstanding",
+                color="Outstanding"
+            )
+
+            st.plotly_chart(
+                fig_customer,
+                use_container_width=True
+            )
+
+    # ==================================================
+    # DETAIL
+    # ==================================================
+
+    with tab4:
+
+        st.subheader("Detail Data")
+
+        st.dataframe(
+            df,
+            use_container_width=True,
+            height=700
+        )
+
+    # ==================================================
+    # MOVE COIL
+    # ==================================================
+
+    with tab5:
+
+        st.subheader(
+            "Move Coil Recommendation"
+        )
+
+        move_df = df.copy()
+
+        if "Move_Coil_Result" in move_df.columns:
+
+            move_df = move_df[
+                move_df["Move_Coil_Result"] != "CLOSED"
+            ]
+
+            display_cols = [
+                c for c in [
+                    "OrderNo",
+                    "Buyer",
+                    "End Cust.",
+                    "SPEC_KEY",
+                    "Outstanding",
+                    "Move_Available",
+                    "Move_Qty",
+                    "Move_From_Order",
+                    "Balance_To_Produce",
+                    "Move_Coil_Result",
+                    "Move_Priority"
+                ]
+                if c in move_df.columns
+            ]
+
+            st.dataframe(
+                move_df[display_cols],
+                use_container_width=True,
+                height=700
+            )
+
+    # ==================================================
+    # PLANNING
+    # ==================================================
+
+    with tab6:
+
+        st.subheader(
+            "Production Planning"
+        )
+
+        planning_df = df[
+            df["Outstanding"] > 0
+        ].copy()
+
+        cols = [
+            c for c in [
+                "OrderNo",
+                "Buyer",
+                "End Cust.",
+                "SPEC_KEY",
+                "Outstanding",
+                "Move_Qty",
+                "Balance_To_Produce",
+                "Move_Priority"
+            ]
+            if c in planning_df.columns
+        ]
+
+        st.dataframe(
+            planning_df[cols],
+            use_container_width=True,
+            height=700
+        )
+
+    # ==================================================
+    # MOVE FORM
+    # ==================================================
+
+    with tab7:
+
+        st.subheader(
+            "SSI Move Coil Form"
+        )
+
+        move_form = df.copy()
+
+        if "Move_Coil_Result" in move_form.columns:
+
+            move_form = move_form[
+                move_form["Move_Coil_Result"]
+                != "CLOSED"
+            ]
+
+            form_cols = [
+                c for c in [
+                    "OrderNo",
+                    "Item",
+                    "Buyer",
+                    "End Cust.",
+                    "Prod Cd",
+                    "Com.SG",
+                    "Equi  Grade",
+                    "EndUse",
+                    "Thk",
+                    "Wid",
+                    "Move_From_Order",
+                    "Move_Qty",
+                    "Balance_To_Produce",
+                    "Move_Coil_Result",
+                    "Move_Priority",
+                    "Result_After_Check",
+                    "Remark"
+                ]
+                if c in move_form.columns
+            ]
+
+            st.dataframe(
+                move_form[form_cols],
+                use_container_width=True,
+                height=700
+            )
