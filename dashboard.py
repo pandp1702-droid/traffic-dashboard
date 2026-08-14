@@ -12,82 +12,87 @@ def show_dashboard(df):
 
     tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(
         [
-            "Executive",
+            "ภาพรวม",
             "Buyer",
-            "Customer",
-            "Detail",
+            "ลูกค้า",
+            "ข้อมูล",
             "Move Coil",
-            "Planning",
-            "Move Form"
+            "แผนการผลิต",
+            "ฟอร์ม Move Coil"
         ]
     )
 
     # =====================================
-    # EXECUTIVE
+    # ภาพรวม
     # =====================================
 
     with tab1:
 
-        st.subheader("SSI KPI")
+        st.subheader("สรุปภาพรวม")
 
         k1, k2, k3, k4 = st.columns(4)
 
         k1.metric(
-            "Orders",
+            "จำนวนออร์เดอร์",
             len(df)
         )
 
         k2.metric(
-            "Outstanding",
-            round(df["Outstanding"].sum(), 2)
-            if "Outstanding" in df.columns
-            else 0
+            "ค้างส่ง",
+            round(
+                df["Outstanding"].sum(),
+                2
+            ) if "Outstanding" in df.columns else 0
         )
 
         k3.metric(
-            "Production Add",
-            round(df["Production_Add"].sum(), 2)
-            if "Production_Add" in df.columns
-            else 0
+            "ผลิตเพิ่ม",
+            round(
+                df["Production_Add"].sum(),
+                2
+            ) if "Production_Add" in df.columns else 0
         )
 
         k4.metric(
-            "NC Coil",
-            round(df["NC"].sum(), 2)
-            if "NC" in df.columns
-            else 0
+            "คอยที่มีปัญหา",
+            round(
+                df["NC"].sum(),
+                2
+            ) if "NC" in df.columns else 0
         )
 
         k5, k6, k7, k8 = st.columns(4)
 
         k5.metric(
-            "Ready To Ship",
-            round(df["Ready_To_Ship"].sum(), 2)
-            if "Ready_To_Ship" in df.columns
-            else 0
+            "คอยพร้อมส่ง",
+            round(
+                df["Ready_To_Ship"].sum(),
+                2
+            ) if "Ready_To_Ship" in df.columns else 0
         )
 
         k6.metric(
-            "Total Coil",
-            round(df["Total_Coil"].sum(), 2)
-            if "Total_Coil" in df.columns
-            else 0
+            "คอยทั้งหมด",
+            round(
+                df["Total_Coil"].sum(),
+                2
+            ) if "Total_Coil" in df.columns else 0
         )
 
         k7.metric(
-            "Remaining Coil",
-            round(df["Remaining_Coil"].sum(), 2)
-            if "Remaining_Coil" in df.columns
-            else 0
+            "คอยที่เหลือ",
+            round(
+                df["Remaining_Coil"].sum(),
+                2
+            ) if "Remaining_Coil" in df.columns else 0
         )
 
         k8.metric(
-            "Old Orders",
+            "Old Order",
             (
                 df["Old_Order"] == "YES"
             ).sum()
-            if "Old_Order" in df.columns
-            else 0
+            if "Old_Order" in df.columns else 0
         )
 
         st.divider()
@@ -97,41 +102,40 @@ def show_dashboard(df):
         m1.metric(
             "Move Coil",
             (
-                df["Move_Coil_Result"] == "MOVE COIL"
+                df["Move_Coil_Result"]
+                == "MOVE COIL"
             ).sum()
-            if "Move_Coil_Result" in df.columns
-            else 0
+            if "Move_Coil_Result" in df.columns else 0
         )
 
         m2.metric(
-            "Move + Produce",
+            "Move Coil + ผลิตเพิ่ม",
             (
                 df["Move_Coil_Result"]
                 == "MOVE + PRODUCE"
             ).sum()
-            if "Move_Coil_Result" in df.columns
-            else 0
+            if "Move_Coil_Result" in df.columns else 0
         )
 
         m3.metric(
-            "Produce Only",
+            "ผลิตเพิ่ม",
             (
                 df["Move_Coil_Result"]
                 == "PRODUCE ONLY"
             ).sum()
-            if "Move_Coil_Result" in df.columns
-            else 0
+            if "Move_Coil_Result" in df.columns else 0
         )
 
         m4.metric(
-            "High Priority",
+            "เร่งด่วน",
             (
                 df["Move_Priority"]
                 == "HIGH"
             ).sum()
-            if "Move_Priority" in df.columns
-            else 0
+            if "Move_Priority" in df.columns else 0
         )
+
+        # สถานะ Move Coil
 
         if "Move_Coil_Result" in df.columns:
 
@@ -142,14 +146,18 @@ def show_dashboard(df):
             )
 
             move_status.columns = [
-                "Status",
-                "Count"
+                "สถานะ",
+                "จำนวน"
             ]
+
+            st.subheader(
+                "สถานะ Move Coil"
+            )
 
             fig_move = px.pie(
                 move_status,
-                names="Status",
-                values="Count",
+                names="สถานะ",
+                values="จำนวน",
                 hole=0.5
             )
 
@@ -158,13 +166,44 @@ def show_dashboard(df):
                 use_container_width=True
             )
 
+        # อายุค้างส่ง
+
+        if "Aging_Group" in df.columns:
+
+            aging_df = (
+                df["Aging_Group"]
+                .value_counts()
+                .reset_index()
+            )
+
+            aging_df.columns = [
+                "อายุค้างส่ง",
+                "จำนวน"
+            ]
+
+            st.subheader(
+                "อายุค้างส่ง"
+            )
+
+            fig_aging = px.pie(
+                aging_df,
+                names="อายุค้างส่ง",
+                values="จำนวน",
+                hole=0.5
+            )
+
+            st.plotly_chart(
+                fig_aging,
+                use_container_width=True
+            )
+
     # =====================================
-    # BUYER
+    # Buyer
     # =====================================
 
     with tab2:
 
-        st.subheader("Buyer Scorecard")
+        st.subheader("สรุปตาม Buyer")
 
         if "Buyer" in df.columns:
 
@@ -190,12 +229,12 @@ def show_dashboard(df):
             )
 
     # =====================================
-    # CUSTOMER
+    # ลูกค้า
     # =====================================
 
     with tab3:
 
-        st.subheader("Customer Summary")
+        st.subheader("สรุปลูกค้า")
 
         if "End Cust." in df.columns:
 
@@ -215,12 +254,12 @@ def show_dashboard(df):
             )
 
     # =====================================
-    # DETAIL
+    # ข้อมูล
     # =====================================
 
     with tab4:
 
-        st.subheader("Detail Data")
+        st.subheader("รายละเอียดข้อมูล")
 
         st.dataframe(
             df,
@@ -229,5 +268,72 @@ def show_dashboard(df):
         )
 
     # =====================================
-    # MOVE COIL
-    # ============================
+    # Move Coil
+    # =====================================
+
+    with tab5:
+
+        st.subheader("แนะนำ Move Coil")
+
+        move_df = df[
+            df["Move_Coil_Result"] != "CLOSED"
+        ]
+
+        cols = [
+            c for c in [
+                "OrderNo",
+                "Buyer",
+                "End Cust.",
+                "SPEC_KEY",
+                "Outstanding",
+                "Move_Available",
+                "Move_Qty",
+                "Move_From_Order",
+                "Balance_To_Produce",
+                "Move_Coil_Result",
+                "Move_Priority"
+            ]
+            if c in move_df.columns
+        ]
+
+        st.dataframe(
+            move_df[cols],
+            use_container_width=True,
+            height=700
+        )
+
+    # =====================================
+    # แผนการผลิต
+    # =====================================
+
+    with tab6:
+
+        st.subheader("แผนการผลิต")
+
+        planning_df = df[
+            df["Outstanding"] > 0
+        ]
+
+        st.dataframe(
+            planning_df,
+            use_container_width=True,
+            height=700
+        )
+
+    # =====================================
+    # ฟอร์ม Move Coil
+    # =====================================
+
+    with tab7:
+
+        st.subheader("ฟอร์ม Move Coil")
+
+        move_form = df[
+            df["Move_Coil_Result"] != "CLOSED"
+        ]
+
+        st.dataframe(
+            move_form,
+            use_container_width=True,
+            height=700
+        )
