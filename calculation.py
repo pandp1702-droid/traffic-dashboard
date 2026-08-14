@@ -49,7 +49,7 @@ def calculate(df):
     # SPEC KEY
     # =====================================
 
-    required_cols = [
+    key_cols = [
         "Com.SG",
         "Equi  Grade",
         "EndUse",
@@ -57,7 +57,7 @@ def calculate(df):
         "Cert. Cust."
     ]
 
-    if all(col in df.columns for col in required_cols):
+    if all(col in df.columns for col in key_cols):
 
         df["SPEC_KEY"] = (
             df["Com.SG"].astype(str)
@@ -231,7 +231,6 @@ def calculate(df):
         - df["Move_Qty"]
     )
 
-    # Placeholder
     df["Move_From_Order"] = ""
 
     # =====================================
@@ -267,4 +266,110 @@ def calculate(df):
     # =====================================
 
     df["Order_Plus"] = np.where(
-   
+        df["Production_Add"] > 3.999,
+        "YES",
+        "NO"
+    )
+
+    # =====================================
+    # CLOSE ORDER
+    # =====================================
+
+    df["Close_Order"] = np.where(
+        (
+            df["Production_Add"] < 3.999
+        )
+        &
+        (
+            df["Sum"] == 0
+        ),
+        "ปิด",
+        "Failed"
+    )
+
+    # =====================================
+    # HIGH RISK
+    # =====================================
+
+    df["High_Risk"] = np.where(
+        df["Production_Add"] > 0,
+        "YES",
+        "NO"
+    )
+
+    # =====================================
+    # SSI KPI
+    # =====================================
+
+    df["Not_Produced"] = (
+        df["Remain_Insert_Slab_Confirm"]
+    )
+
+    df["In_Production"] = (
+        df["Other_Suspend"]
+    )
+
+    df["Ready_To_Ship"] = (
+        df["Sample_Test_WP_Rdy"]
+    )
+
+    df["Problem_Coil"] = (
+        df["NC"]
+    )
+
+    df["Total_Coil"] = (
+        df["Not_Produced"]
+        + df["In_Production"]
+        + df["Ready_To_Ship"]
+    )
+
+    # =====================================
+    # OLD ORDER / AGING
+    # =====================================
+
+    if "Last Shipment Date" in df.columns:
+
+        shipment_date = pd.to_datetime(
+            df["Last Shipment Date"].astype(str),
+            format="%Y%m%d",
+            errors="coerce"
+        )
+
+        aging_days = (
+            pd.Timestamp.today()
+            - shipment_date
+        ).dt.days
+
+        df["Old_Order"] = np.where(
+            aging_days > 90,
+            "YES",
+            "NO"
+        )
+
+        df["Shipment_Month"] = (
+            shipment_date.dt.strftime("%Y-%m")
+        )
+
+        df["Aging_Group"] = np.select(
+            [
+                aging_days <= 30,
+                aging_days <= 60,
+                aging_days <= 90,
+                aging_days > 90
+            ],
+            [
+                "0-30 Days",
+                "31-60 Days",
+                "61-90 Days",
+                "90+ Days"
+            ],
+            default="Unknown"
+        )
+
+    else:
+
+        df["Old_Order"] = "NO"
+        df["Shipment_Month"] = ""
+        df["Aging_Group"] = ""
+
+    return df
