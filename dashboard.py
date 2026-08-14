@@ -221,7 +221,7 @@ def show_dashboard(df):
             )
 
     # ==================================================
-    # ลูกค้า
+    # CUSTOMER
     # ==================================================
 
     with tab3:
@@ -238,10 +238,6 @@ def show_dashboard(df):
                     "NC": "sum"
                 })
                 .reset_index()
-                .sort_values(
-                    "Outstanding",
-                    ascending=False
-                )
             )
 
             st.dataframe(
@@ -251,7 +247,7 @@ def show_dashboard(df):
             )
 
     # ==================================================
-    # ข้อมูล
+    # DETAIL
     # ==================================================
 
     with tab4:
@@ -277,8 +273,7 @@ def show_dashboard(df):
         if "Move_Coil_Result" in move_df.columns:
 
             move_df = move_df[
-                move_df["Move_Coil_Result"]
-                != "CLOSED"
+                move_df["Move_Coil_Result"] != "CLOSED"
             ]
 
             cols = [
@@ -305,7 +300,7 @@ def show_dashboard(df):
             )
 
     # ==================================================
-    # แผนการผลิต
+    # PLANNING
     # ==================================================
 
     with tab6:
@@ -336,7 +331,7 @@ def show_dashboard(df):
         )
 
     # ==================================================
-    # ฟอร์ม Move Coil
+    # MOVE FORM
     # ==================================================
 
     with tab7:
@@ -348,8 +343,7 @@ def show_dashboard(df):
         if "Move_Coil_Result" in move_form.columns:
 
             move_form = move_form[
-                move_form["Move_Coil_Result"]
-                != "CLOSED"
+                move_form["Move_Coil_Result"] != "CLOSED"
             ]
 
             cols = [
