@@ -28,56 +28,20 @@ def export_to_excel(df):
         ],
         "ค่า": [
             len(df),
-
-            df["Outstanding"].sum()
-            if "Outstanding" in df.columns
-            else 0,
-
-            df["Not_Produced"].sum()
-            if "Not_Produced" in df.columns
-            else 0,
-
-            df["In_Production"].sum()
-            if "In_Production" in df.columns
-            else 0,
-
-            df["Ready_To_Ship"].sum()
-            if "Ready_To_Ship" in df.columns
-            else 0,
-
-            df["Total_Coil"].sum()
-            if "Total_Coil" in df.columns
-            else 0,
-
-            df["NC"].sum()
-            if "NC" in df.columns
-            else 0,
-
-            df["Production_Add"].sum()
-            if "Production_Add" in df.columns
-            else 0,
-
-            df["Remaining_Coil"].sum()
-            if "Remaining_Coil" in df.columns
-            else 0,
-
-            df["Move_Available"].sum()
-            if "Move_Available" in df.columns
-            else 0,
-
-            df["Move_Qty"].sum()
-            if "Move_Qty" in df.columns
-            else 0,
-
-            df["Balance_To_Produce"].sum()
-            if "Balance_To_Produce" in df.columns
-            else 0,
-
+            df["Outstanding"].sum() if "Outstanding" in df.columns else 0,
+            df["Not_Produced"].sum() if "Not_Produced" in df.columns else 0,
+            df["In_Production"].sum() if "In_Production" in df.columns else 0,
+            df["Ready_To_Ship"].sum() if "Ready_To_Ship" in df.columns else 0,
+            df["Total_Coil"].sum() if "Total_Coil" in df.columns else 0,
+            df["NC"].sum() if "NC" in df.columns else 0,
+            df["Production_Add"].sum() if "Production_Add" in df.columns else 0,
+            df["Remaining_Coil"].sum() if "Remaining_Coil" in df.columns else 0,
+            df["Move_Available"].sum() if "Move_Available" in df.columns else 0,
+            df["Move_Qty"].sum() if "Move_Qty" in df.columns else 0,
+            df["Balance_To_Produce"].sum() if "Balance_To_Produce" in df.columns else 0,
             (
                 df["Old_Order"] == "YES"
-            ).sum()
-            if "Old_Order" in df.columns
-            else 0
+            ).sum() if "Old_Order" in df.columns else 0
         ]
     })
 
@@ -311,47 +275,4 @@ def export_to_excel(df):
             )
 
         if not move_recommendation.empty:
-            move_recommendation.to_excel(
-                writer,
-                sheet_name="แนะนำ Move Coil",
-                index=False
-            )
-
-        if not planning_df.empty:
-            planning_df.to_excel(
-                writer,
-                sheet_name="แผนการผลิต",
-                index=False
-            )
-
-        if not high_risk_df.empty:
-            high_risk_df.to_excel(
-                writer,
-                sheet_name="High Risk Orders",
-                index=False
-            )
-
-        if not old_order_df.empty:
-            old_order_df.to_excel(
-                writer,
-                sheet_name="Old Orders",
-                index=False
-            )
-
-        if not aging_summary.empty:
-            aging_summary.to_excel(
-                writer,
-                sheet_name="Aging Summary",
-                index=False
-            )
-
-        if not move_form.empty:
-            move_form.to_excel(
-                writer,
-                sheet_name="ฟอร์ม Move Coil",
-                index=False
-            )
-
-    output.seek(0)
-
-    return output.getvalue()
+            
