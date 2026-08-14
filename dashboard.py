@@ -28,45 +28,65 @@ def show_dashboard(df):
 
     with tab1:
 
-        c1, c2, c3, c4 = st.columns(4)
+        st.subheader("SSI KPI")
 
-        c1.metric(
+        k1, k2, k3, k4 = st.columns(4)
+
+        k1.metric(
+            "Orders",
+            len(df)
+        )
+
+        k2.metric(
             "Outstanding",
-            round(
-                df["Outstanding"].sum(),
-                2
-            )
+            round(df["Outstanding"].sum(), 2)
             if "Outstanding" in df.columns
             else 0
         )
 
-        c2.metric(
+        k3.metric(
             "Production Add",
-            round(
-                df["Production_Add"].sum(),
-                2
-            )
+            round(df["Production_Add"].sum(), 2)
             if "Production_Add" in df.columns
             else 0
         )
 
-        c3.metric(
+        k4.metric(
             "NC Coil",
-            round(
-                df["NC"].sum(),
-                2
-            )
+            round(df["NC"].sum(), 2)
             if "NC" in df.columns
             else 0
         )
 
-        c4.metric(
-            "Move Available",
-            round(
-                df["Move_Available"].sum(),
-                2
-            )
-            if "Move_Available" in df.columns
+        k5, k6, k7, k8 = st.columns(4)
+
+        k5.metric(
+            "Ready To Ship",
+            round(df["Ready_To_Ship"].sum(), 2)
+            if "Ready_To_Ship" in df.columns
+            else 0
+        )
+
+        k6.metric(
+            "Total Coil",
+            round(df["Total_Coil"].sum(), 2)
+            if "Total_Coil" in df.columns
+            else 0
+        )
+
+        k7.metric(
+            "Remaining Coil",
+            round(df["Remaining_Coil"].sum(), 2)
+            if "Remaining_Coil" in df.columns
+            else 0
+        )
+
+        k8.metric(
+            "Old Orders",
+            (
+                df["Old_Order"] == "YES"
+            ).sum()
+            if "Old_Order" in df.columns
             else 0
         )
 
@@ -77,8 +97,7 @@ def show_dashboard(df):
         m1.metric(
             "Move Coil",
             (
-                df["Move_Coil_Result"]
-                == "MOVE COIL"
+                df["Move_Coil_Result"] == "MOVE COIL"
             ).sum()
             if "Move_Coil_Result" in df.columns
             else 0
@@ -114,8 +133,6 @@ def show_dashboard(df):
             else 0
         )
 
-        st.divider()
-
         if "Move_Coil_Result" in df.columns:
 
             move_status = (
@@ -141,40 +158,13 @@ def show_dashboard(df):
                 use_container_width=True
             )
 
-        if "Aging_Group" in df.columns:
-
-            aging_df = (
-                df["Aging_Group"]
-                .value_counts()
-                .reset_index()
-            )
-
-            aging_df.columns = [
-                "Aging",
-                "Count"
-            ]
-
-            fig_aging = px.pie(
-                aging_df,
-                names="Aging",
-                values="Count",
-                hole=0.5
-            )
-
-            st.plotly_chart(
-                fig_aging,
-                use_container_width=True
-            )
-
     # =====================================
     # BUYER
     # =====================================
 
     with tab2:
 
-        st.subheader(
-            "Buyer Scorecard"
-        )
+        st.subheader("Buyer Scorecard")
 
         if "Buyer" in df.columns:
 
@@ -205,9 +195,7 @@ def show_dashboard(df):
 
     with tab3:
 
-        st.subheader(
-            "Customer Summary"
-        )
+        st.subheader("Customer Summary")
 
         if "End Cust." in df.columns:
 
@@ -217,4 +205,29 @@ def show_dashboard(df):
                     "Outstanding": "sum",
                     "Production_Add": "sum",
                     "NC": "sum"
- 
+                })
+                .reset_index()
+            )
+
+            st.dataframe(
+                customer_df,
+                use_container_width=True
+            )
+
+    # =====================================
+    # DETAIL
+    # =====================================
+
+    with tab4:
+
+        st.subheader("Detail Data")
+
+        st.dataframe(
+            df,
+            use_container_width=True,
+            height=700
+        )
+
+    # =====================================
+    # MOVE COIL
+    # ============================
