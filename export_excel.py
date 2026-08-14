@@ -24,6 +24,8 @@ def export_to_excel(df):
             "Production Add",
             "Remaining Coil",
             "Move Available",
+            "Move Qty",
+            "Balance To Produce",
             "Old Orders"
 
         ],
@@ -68,6 +70,14 @@ def export_to_excel(df):
             if "Move_Available" in df.columns
             else 0,
 
+            df["Move_Qty"].sum()
+            if "Move_Qty" in df.columns
+            else 0,
+
+            df["Balance_To_Produce"].sum()
+            if "Balance_To_Produce" in df.columns
+            else 0,
+
             (
                 df["Old_Order"] == "YES"
             ).sum()
@@ -92,6 +102,8 @@ def export_to_excel(df):
                 "Production_Add": "sum",
                 "NC": "sum",
                 "Move_Available": "sum",
+                "Move_Qty": "sum",
+                "Balance_To_Produce": "sum",
                 "Ready_To_Ship": "sum"
             })
             .reset_index()
@@ -180,7 +192,21 @@ def export_to_excel(df):
         )
 
     # =====================================
-    # HIGH RISK ORDERS
+    # PLANNING
+    # =====================================
+
+    planning_df = pd.DataFrame()
+
+    if "Outstanding" in df.columns:
+
+        planning_df = (
+            df[
+                df["Outstanding"] > 0
+            ]
+        )
+
+    # =====================================
+    # HIGH RISK
     # =====================================
 
     high_risk_df = pd.DataFrame()
@@ -284,6 +310,14 @@ def export_to_excel(df):
             move_recommendation.to_excel(
                 writer,
                 sheet_name="Move Recommendation",
+                index=False
+            )
+
+        if not planning_df.empty:
+
+            planning_df.to_excel(
+                writer,
+                sheet_name="Production Planning",
                 index=False
             )
 
