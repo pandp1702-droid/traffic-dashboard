@@ -22,9 +22,9 @@ def show_dashboard(df):
         ]
     )
 
-    # =====================================
+    # ==================================================
     # ภาพรวม
-    # =====================================
+    # ==================================================
 
     with tab1:
 
@@ -102,8 +102,7 @@ def show_dashboard(df):
         m1.metric(
             "Move Coil",
             (
-                df["Move_Coil_Result"]
-                == "MOVE COIL"
+                df["Move_Coil_Result"] == "Move Coil"
             ).sum()
             if "Move_Coil_Result" in df.columns else 0
         )
@@ -112,7 +111,7 @@ def show_dashboard(df):
             "Move Coil + ผลิตเพิ่ม",
             (
                 df["Move_Coil_Result"]
-                == "MOVE + PRODUCE"
+                == "Move Coil + ผลิตเพิ่ม"
             ).sum()
             if "Move_Coil_Result" in df.columns else 0
         )
@@ -120,8 +119,7 @@ def show_dashboard(df):
         m3.metric(
             "ผลิตเพิ่ม",
             (
-                df["Move_Coil_Result"]
-                == "PRODUCE ONLY"
+                df["Move_Coil_Result"] == "ผลิตเพิ่ม"
             ).sum()
             if "Move_Coil_Result" in df.columns else 0
         )
@@ -129,13 +127,12 @@ def show_dashboard(df):
         m4.metric(
             "เร่งด่วน",
             (
-                df["Move_Priority"]
-                == "HIGH"
+                df["Move_Priority"] == "HIGH"
             ).sum()
             if "Move_Priority" in df.columns else 0
         )
 
-        # สถานะ Move Coil
+        st.divider()
 
         if "Move_Coil_Result" in df.columns:
 
@@ -150,9 +147,7 @@ def show_dashboard(df):
                 "จำนวน"
             ]
 
-            st.subheader(
-                "สถานะ Move Coil"
-            )
+            st.subheader("สถานะ Move Coil")
 
             fig_move = px.pie(
                 move_status,
@@ -165,8 +160,6 @@ def show_dashboard(df):
                 fig_move,
                 use_container_width=True
             )
-
-        # อายุค้างส่ง
 
         if "Aging_Group" in df.columns:
 
@@ -181,9 +174,7 @@ def show_dashboard(df):
                 "จำนวน"
             ]
 
-            st.subheader(
-                "อายุค้างส่ง"
-            )
+            st.subheader("อายุค้างส่ง")
 
             fig_aging = px.pie(
                 aging_df,
@@ -197,9 +188,9 @@ def show_dashboard(df):
                 use_container_width=True
             )
 
-    # =====================================
-    # Buyer
-    # =====================================
+    # ==================================================
+    # BUYER
+    # ==================================================
 
     with tab2:
 
@@ -225,12 +216,13 @@ def show_dashboard(df):
 
             st.dataframe(
                 buyer_df,
-                use_container_width=True
+                use_container_width=True,
+                height=700
             )
 
-    # =====================================
+    # ==================================================
     # ลูกค้า
-    # =====================================
+    # ==================================================
 
     with tab3:
 
@@ -246,16 +238,21 @@ def show_dashboard(df):
                     "NC": "sum"
                 })
                 .reset_index()
+                .sort_values(
+                    "Outstanding",
+                    ascending=False
+                )
             )
 
             st.dataframe(
                 customer_df,
-                use_container_width=True
+                use_container_width=True,
+                height=700
             )
 
-    # =====================================
+    # ==================================================
     # ข้อมูล
-    # =====================================
+    # ==================================================
 
     with tab4:
 
@@ -267,44 +264,49 @@ def show_dashboard(df):
             height=700
         )
 
-    # =====================================
-    # Move Coil
-    # =====================================
+    # ==================================================
+    # MOVE COIL
+    # ==================================================
 
     with tab5:
 
         st.subheader("แนะนำ Move Coil")
 
-        move_df = df[
-            df["Move_Coil_Result"] != "CLOSED"
-        ]
+        move_df = df.copy()
 
-        cols = [
-            c for c in [
-                "OrderNo",
-                "Buyer",
-                "End Cust.",
-                "SPEC_KEY",
-                "Outstanding",
-                "Move_Available",
-                "Move_Qty",
-                "Move_From_Order",
-                "Balance_To_Produce",
-                "Move_Coil_Result",
-                "Move_Priority"
+        if "Move_Coil_Result" in move_df.columns:
+
+            move_df = move_df[
+                move_df["Move_Coil_Result"]
+                != "CLOSED"
             ]
-            if c in move_df.columns
-        ]
 
-        st.dataframe(
-            move_df[cols],
-            use_container_width=True,
-            height=700
-        )
+            cols = [
+                c for c in [
+                    "OrderNo",
+                    "Buyer",
+                    "End Cust.",
+                    "SPEC_KEY",
+                    "Outstanding",
+                    "Move_Available",
+                    "Move_Qty",
+                    "Move_From_Order",
+                    "Balance_To_Produce",
+                    "Move_Coil_Result",
+                    "Move_Priority"
+                ]
+                if c in move_df.columns
+            ]
 
-    # =====================================
+            st.dataframe(
+                move_df[cols],
+                use_container_width=True,
+                height=700
+            )
+
+    # ==================================================
     # แผนการผลิต
-    # =====================================
+    # ==================================================
 
     with tab6:
 
@@ -314,26 +316,67 @@ def show_dashboard(df):
             df["Outstanding"] > 0
         ]
 
+        cols = [
+            c for c in [
+                "OrderNo",
+                "Buyer",
+                "SPEC_KEY",
+                "Outstanding",
+                "Move_Qty",
+                "Balance_To_Produce",
+                "Move_Priority"
+            ]
+            if c in planning_df.columns
+        ]
+
         st.dataframe(
-            planning_df,
+            planning_df[cols],
             use_container_width=True,
             height=700
         )
 
-    # =====================================
+    # ==================================================
     # ฟอร์ม Move Coil
-    # =====================================
+    # ==================================================
 
     with tab7:
 
         st.subheader("ฟอร์ม Move Coil")
 
-        move_form = df[
-            df["Move_Coil_Result"] != "CLOSED"
-        ]
+        move_form = df.copy()
 
-        st.dataframe(
-            move_form,
-            use_container_width=True,
-            height=700
-        )
+        if "Move_Coil_Result" in move_form.columns:
+
+            move_form = move_form[
+                move_form["Move_Coil_Result"]
+                != "CLOSED"
+            ]
+
+            cols = [
+                c for c in [
+                    "OrderNo",
+                    "Item",
+                    "Buyer",
+                    "End Cust.",
+                    "Prod Cd",
+                    "Com.SG",
+                    "Equi  Grade",
+                    "EndUse",
+                    "Thk",
+                    "Wid",
+                    "Move_From_Order",
+                    "Move_Qty",
+                    "Balance_To_Produce",
+                    "Move_Coil_Result",
+                    "Move_Priority",
+                    "Result_After_Check",
+                    "Remark"
+                ]
+                if c in move_form.columns
+            ]
+
+            st.dataframe(
+                move_form[cols],
+                use_container_width=True,
+                height=700
+            )
